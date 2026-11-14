@@ -496,6 +496,7 @@
       .input:focus {
         border-color: #9bc452;
       }
+      .input[type="text"]:not(#username), .input[type="search"], textarea.input { text-transform: capitalize; }
       .toolbar .input:first-child {
         max-width: 260px;
       }
@@ -1080,6 +1081,8 @@
       const SUPABASE_KEY = "sb_publishable_6hItENblKi21RTTTS9TMlQ_L-B9mAOc";
       const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
       const $ = (s) => document.querySelector(s);
+      const caseKey = (value) => String(value ?? "").trim().toLocaleLowerCase("en-IN");
+      const capitalizeWords = (value) => String(value ?? "").trim().toLocaleLowerCase("en-IN").replace(/(^|\s)(\p{L})/gu, (_, space, letter) => space + letter.toLocaleUpperCase("en-IN"));
       const today = () => {
         const d = new Date();
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -1457,14 +1460,14 @@
         const todayPlan = plan[todayPlanNo - 1];
         const todayWorkoutHtml = todayPlan
           ? todayPlan[2].map(([name, reps]) => {
-              const done = workouts.some(x => x.exercise === name);
+              const done = workouts.some(x => caseKey(x.exercise) === caseKey(name));
               return `<div class="today-item ${done ? "checked" : ""}"><span class="mark">${done ? "✓" : "○"}</span><div><b>${esc(name)}</b><small>${esc(reps)}</small></div><small>${done ? "Done" : "Aaj"}</small></div>`;
             }).join("")
           : '<div class="empty">Workout plan load nahi hua. Supabase setup check karein.</div>';
         const todayMealsHtml = mealPlan.map(([time, name, icon, description, calories]) => {
-          const done = meals.some(x => x.meal_name === name);
+          const done = meals.some(x => caseKey(x.meal_name) === caseKey(name));
           const slot = name === "Evening oats" ? "Evening meal" : name;
-          const variation = dietOverrideActive ? null : weeklyVariations.find(x => x.weekday_number === calendarDayNo && x.meal_slot === slot);
+          const variation = dietOverrideActive ? null : weeklyVariations.find(x => x.weekday_number === calendarDayNo && caseKey(x.meal_slot) === caseKey(slot));
           return `<div class="today-item ${done ? "checked" : ""}"><span class="mark">${done ? "✓" : esc(icon)}</span><div><b>${esc(name)}</b><small>${esc(variation?.description || description)} · ${calories} kcal</small></div><small class="meal-time">${esc(time)}</small></div>`;
         }).join("");
         const todayPlanHtml = `<div class="grid today-plan-grid"><div class="card"><div class="card-title"><div><h3>Aaj ka workout · Day ${todayPlanNo}${todayPlan ? ` · ${esc(todayPlan[0])}` : ""}</h3><small>${todayPlan ? esc(todayPlan[1]) : "Weekly plan"} · ${workouts.length}/${todayPlan?.[2]?.length || 0} complete</small></div><button class="btn subtle" onclick="window.go('workout')">Full plan →</button></div><div class="today-list">${todayWorkoutHtml}</div></div><div class="card"><div class="card-title"><div><h3>Aaj ka meal plan</h3><small>${meals.length}/${mealPlan.length} meals checked</small></div><button class="btn subtle" onclick="window.go('diet')">Diet plan →</button></div><div class="today-list">${todayMealsHtml || '<div class="empty">Diet plan load nahi hua.</div>'}</div></div></div>`;
@@ -1512,30 +1515,30 @@
         let icons = { expense: "↘", income: "↗", lent: "⇄", repayment: "✓", borrowed: "↙" },
           sign = ["income", "repayment", "borrowed"].includes(t.kind) ? "+" : "−";
         const loanState = t.kind === "lent" || t.kind === "borrowed" ? ` · ${loanStatusText(t)}` : "";
-        return `<div class="txrow"><div class="txico">${icons[t.kind] || "₹"}</div><div><b>${esc(t.title || t.category || "Entry")}</b><small>${esc(t.category || "General")} · ${new Date(t.occurred_on + "T12:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" })}${t.person ? " · " + esc(t.person) : ""}${loanState}</small></div><div class="txamt ${sign === "+" ? "pos" : "neg"}">${sign}${money(t.amount)}</div></div>`;
+        return `<div class="txrow"><div class="txico">${icons[t.kind] || "₹"}</div><div><b>${esc(capitalizeWords(t.title || t.category || "Entry"))}</b><small>${esc(capitalizeWords(t.category || "General"))} · ${new Date(t.occurred_on + "T12:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" })}${t.person ? " · " + esc(capitalizeWords(t.person)) : ""}${loanState}</small></div><div class="txamt ${sign === "+" ? "pos" : "neg"}">${sign}${money(t.amount)}</div></div>`;
       }
       function renderMoney() {
-        const search = document.querySelector("#search")?.value?.trim().toLowerCase() || "";
-        const people = [...new Set(transactions.map(t => t.person?.trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b));
-        const categories = [...new Set(transactions.map(t => t.category?.trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b));
+        const search = caseKey(document.querySelector("#search")?.value);
+        const people = [...new Map(transactions.filter(t => t.person?.trim()).map(t => [caseKey(t.person), capitalizeWords(t.person)])).entries()].sort((a,b) => a[1].localeCompare(b[1]));
+        const categories = [...new Map(transactions.filter(t => t.category?.trim()).map(t => [caseKey(t.category), capitalizeWords(t.category)])).entries()].sort((a,b) => a[1].localeCompare(b[1]));
         const list = transactions.filter((t) =>
           (!filter || t.kind === filter) &&
           (!moneyMonthFilter || (t.occurred_on || "").startsWith(moneyMonthFilter)) &&
-          (!moneyPersonFilter || t.person === moneyPersonFilter) &&
-          (!moneyCategoryFilter || t.category === moneyCategoryFilter) &&
-          (!search || `${t.title || ""} ${t.category || ""} ${t.person || ""} ${t.note || ""}`.toLowerCase().includes(search))
+          (!moneyPersonFilter || caseKey(t.person) === moneyPersonFilter) &&
+          (!moneyCategoryFilter || caseKey(t.category) === moneyCategoryFilter) &&
+          (!search || caseKey(`${t.title || ""} ${t.category || ""} ${t.person || ""} ${t.note || ""}`).includes(search))
         );
         const total = (kind) => list.filter(t => t.kind === kind).reduce((sum, t) => sum + Number(t.amount || 0), 0);
-        const personLoans = moneyPersonFilter ? transactions.filter(t => t.person?.trim() === moneyPersonFilter && ["lent", "borrowed"].includes(t.kind) && !t.is_settled) : [];
+        const personLoans = moneyPersonFilter ? transactions.filter(t => caseKey(t.person) === moneyPersonFilter && ["lent", "borrowed"].includes(t.kind) && !t.is_settled) : [];
         const personLent = personLoans.filter(t => t.kind === "lent").reduce((sum, t) => sum + Number(t.amount || 0), 0);
         const personBorrowed = personLoans.filter(t => t.kind === "borrowed").reduce((sum, t) => sum + Number(t.amount || 0), 0);
         const personNet = personLent - personBorrowed;
-        const personBalanceHtml = moneyPersonFilter ? `<div class="card person-balance"><div><small>${esc(moneyPersonFilter)} · pending udhar ka hisaab</small><div class="person-balance-breakdown">${money(personLent)} aapne diye · ${money(personBorrowed)} aapne liye</div></div><div class="person-balance-total ${personNet < 0 ? "neg" : "pos"}">${personNet > 0 ? `${money(personNet)} lene hain` : personNet < 0 ? `${money(Math.abs(personNet))} dene hain` : "Koi pending udhar nahi"}</div></div>` : "";
+        const personBalanceHtml = moneyPersonFilter ? `<div class="card person-balance"><div><small>${esc(people.find(([key]) => key === moneyPersonFilter)?.[1] || moneyPersonFilter)} · pending udhar ka hisaab</small><div class="person-balance-breakdown">${money(personLent)} aapne diye · ${money(personBorrowed)} aapne liye</div></div><div class="person-balance-total ${personNet < 0 ? "neg" : "pos"}">${personNet > 0 ? `${money(personNet)} lene hain` : personNet < 0 ? `${money(Math.abs(personNet))} dene hain` : "Koi pending udhar nahi"}</div></div>` : "";
         const errorHtml = transactionsError
           ? `<div class="notice" style="margin-bottom:16px"><b>Money data load nahi hua.</b> ${esc(transactionsError.message || "Supabase error")}<br><small>Supabase mein transactions table, policies aur setup SQL check karein.</small><br><button class="btn subtle" id="retryMoney" style="margin-top:10px">Dobara load karein</button></div>`
           : "";
-        const rows = list.map(t => `<div class="txrow"><div class="txico">${({expense:"↘",income:"↗",lent:"⇄",repayment:"✓",borrowed:"↙"})[t.kind] || "₹"}</div><div class="tx-main"><b>${esc(t.title || t.category || "Entry")}</b><small>${esc(t.category || "General")} · ${t.occurred_on ? new Date(t.occurred_on + "T12:00").toLocaleDateString("en-IN", {day:"numeric",month:"short",year:"numeric"}) : "Date missing"}${t.person ? " · " + esc(t.person) : ""}${t.note ? " · " + esc(t.note) : ""}</small></div><div class="txamt ${["income","repayment","borrowed"].includes(t.kind) ? "pos" : "neg"}">${["income","repayment","borrowed"].includes(t.kind) ? "+" : "−"}${money(t.amount)}</div>${["lent","borrowed"].includes(t.kind) ? `<label class="loan-check"><input type="checkbox" data-loan-status="${esc(String(t.id))}" ${t.is_settled ? "checked" : ""}><span>${t.is_settled ? (t.kind === "lent" ? "Wapas mila" : "Wapas kiya") : (t.kind === "lent" ? "Pending lena" : "Pending dena")}</span></label>` : ""}</div>`).join("");
-        $("#page-money").innerHTML = `${errorHtml}<div class="sectionhead"><div><h2>Money tracker</h2><p>Kharcha, income aur udhar ka daily hisaab.</p></div><button class="btn" id="addMoneyEntry">+ Entry add</button></div><div class="grid stats"><div class="card"><div class="stat-head">Income</div><div class="stat-value">${money(total("income") + total("repayment"))}</div><div class="stat-note">${money(total("income"))} income · ${money(total("repayment"))} udhar wapas</div></div><div class="card"><div class="stat-head">Kharcha</div><div class="stat-value">${money(total("expense"))}</div><div class="stat-note">${list.filter(t => t.kind === "expense").length} entries</div></div><div class="card"><div class="stat-head">Udhar diya · lena baaki</div><div class="stat-value">${money(list.filter(t => t.kind === "lent" && !t.is_settled).reduce((a,t)=>a+Number(t.amount||0),0))}</div><div class="stat-note">${list.filter(t => t.kind === "lent" && !t.is_settled).length} pending</div></div><div class="card"><div class="stat-head">Udhar liya · dena baaki</div><div class="stat-value">${money(list.filter(t => t.kind === "borrowed" && !t.is_settled).reduce((a,t)=>a+Number(t.amount||0),0))}</div><div class="stat-note">${list.filter(t => t.kind === "borrowed" && !t.is_settled).length} pending</div></div></div><div class="card activity"><div class="money-filters"><input class="input" id="search" type="search" placeholder="Title, category ya person search" value="${esc(search)}"><select class="input" id="kindFilter"><option value="">Sabhi types</option><option value="expense">Kharcha</option><option value="income">Income</option><option value="lent">Udhar diya</option><option value="borrowed">Udhar liya</option></select><input class="input" id="monthFilter" type="month" value="${esc(moneyMonthFilter)}"><select class="input" id="personFilter"><option value="">Sabhi log</option>${people.map(person => `<option value="${esc(person)}">${esc(person)}</option>`).join("")}</select><select class="input" id="categoryFilter"><option value="">Sabhi categories</option>${categories.map(category => `<option value="${esc(category)}">${esc(category)}</option>`).join("")}</select></div><div class="card-title"><h3>Entries</h3><small>${list.length} entries</small></div>${rows || (transactionsError ? "" : '<div class="empty">Is filter mein koi entry nahi. Nayi entry add karein.</div>')}${personBalanceHtml}</div>`;
+        const rows = list.map(t => `<div class="txrow"><div class="txico">${({expense:"↘",income:"↗",lent:"⇄",repayment:"✓",borrowed:"↙"})[t.kind] || "₹"}</div><div class="tx-main"><b>${esc(capitalizeWords(t.title || t.category || "Entry"))}</b><small>${esc(capitalizeWords(t.category || "General"))} · ${t.occurred_on ? new Date(t.occurred_on + "T12:00").toLocaleDateString("en-IN", {day:"numeric",month:"short",year:"numeric"}) : "Date missing"}${t.person ? " · " + esc(capitalizeWords(t.person)) : ""}${t.note ? " · " + esc(capitalizeWords(t.note)) : ""}</small></div><div class="txamt ${["income","repayment","borrowed"].includes(t.kind) ? "pos" : "neg"}">${["income","repayment","borrowed"].includes(t.kind) ? "+" : "−"}${money(t.amount)}</div>${["lent","borrowed"].includes(t.kind) ? `<label class="loan-check"><input type="checkbox" data-loan-status="${esc(String(t.id))}" ${t.is_settled ? "checked" : ""}><span>${t.is_settled ? (t.kind === "lent" ? "Wapas mila" : "Wapas kiya") : (t.kind === "lent" ? "Pending lena" : "Pending dena")}</span></label>` : ""}</div>`).join("");
+        $("#page-money").innerHTML = `${errorHtml}<div class="sectionhead"><div><h2>Money tracker</h2><p>Kharcha, income aur udhar ka daily hisaab.</p></div><button class="btn" id="addMoneyEntry">+ Entry add</button></div><div class="grid stats"><div class="card"><div class="stat-head">Income</div><div class="stat-value">${money(total("income") + total("repayment"))}</div><div class="stat-note">${money(total("income"))} income · ${money(total("repayment"))} udhar wapas</div></div><div class="card"><div class="stat-head">Kharcha</div><div class="stat-value">${money(total("expense"))}</div><div class="stat-note">${list.filter(t => t.kind === "expense").length} entries</div></div><div class="card"><div class="stat-head">Udhar diya · lena baaki</div><div class="stat-value">${money(list.filter(t => t.kind === "lent" && !t.is_settled).reduce((a,t)=>a+Number(t.amount||0),0))}</div><div class="stat-note">${list.filter(t => t.kind === "lent" && !t.is_settled).length} pending</div></div><div class="card"><div class="stat-head">Udhar liya · dena baaki</div><div class="stat-value">${money(list.filter(t => t.kind === "borrowed" && !t.is_settled).reduce((a,t)=>a+Number(t.amount||0),0))}</div><div class="stat-note">${list.filter(t => t.kind === "borrowed" && !t.is_settled).length} pending</div></div></div><div class="card activity"><div class="money-filters"><input class="input" id="search" type="search" placeholder="Title, category ya person search" value="${esc(search)}"><select class="input" id="kindFilter"><option value="">Sabhi types</option><option value="expense">Kharcha</option><option value="income">Income</option><option value="lent">Udhar diya</option><option value="borrowed">Udhar liya</option></select><input class="input" id="monthFilter" type="month" value="${esc(moneyMonthFilter)}"><select class="input" id="personFilter"><option value="">Sabhi log</option>${people.map(([key, person]) => `<option value="${esc(key)}">${esc(person)}</option>`).join("")}</select><select class="input" id="categoryFilter"><option value="">Sabhi categories</option>${categories.map(([key, category]) => `<option value="${esc(key)}">${esc(category)}</option>`).join("")}</select></div><div class="card-title"><h3>Entries</h3><small>${list.length} entries</small></div>${rows || (transactionsError ? "" : '<div class="empty">Is filter mein koi entry nahi. Nayi entry add karein.</div>')}${personBalanceHtml}</div>`;
         $("#kindFilter").value = filter;
         $("#personFilter").value = moneyPersonFilter;
         $("#categoryFilter").value = moneyCategoryFilter;
@@ -1579,7 +1582,7 @@
         $("#page-workout").innerHTML =
           `<div class="sectionhead"><div><h2>7-day strength plan</h2><p>Beginner to intermediate · Day 7 home dumbbell session</p></div><span class="tag">${todayLog.length} / ${d[2].length} completed today</span><button class="btn subtle" onclick="window.editWorkoutPlan()">Edit / Add plan</button></div><div class="workoutdays">${plan.map((x, i) => `<button class="daybtn ${activeDay === i + 1 ? "active" : ""}" data-day="${i + 1}"><strong>DAY ${i + 1} · ${x[0]}</strong><small>${x[1]}</small></button>`).join("")}</div><div class="sectionhead"><div><h2>Day ${activeDay}: ${d[0]}</h2><p>${d[1]} · Tap circle when complete</p></div><button class="btn" onclick="window.logWorkoutDay()">Save workout</button></div><div class="grid exercisegrid">${d[2]
             .map(([name, reps], i) => {
-              let done = todayLog.some((x) => x.exercise === name);
+              let done = todayLog.some((x) => caseKey(x.exercise) === caseKey(name));
               return `<div class="card exercise ${done ? "checked" : ""}"><div class="exercise-top"><div><h4>${i + 1}. ${name}</h4><p>${reps}</p></div><button class="done" data-exercise="${esc(name)}">${done ? "✓" : "○"}</button></div></div>`;
             })
             .join(
@@ -1596,7 +1599,7 @@
           (b) =>
             (b.onclick = async () => {
               let name = b.dataset.exercise,
-                found = workouts.find((x) => x.exercise === name);
+                found = workouts.find((x) => caseKey(x.exercise) === caseKey(name));
               if (found) {
                 let { error } = await supabase
                   .from("workout_logs")
@@ -1637,14 +1640,14 @@
           : "";
         const mealsHtml = mealPlan.length
           ? mealPlan.map(([time, name, icon, desc, kcal, prot], i) => {
-              const done = meals.some(x => x.meal_name === name);
+              const done = meals.some(x => caseKey(x.meal_name) === caseKey(name));
               return `<div class="card meal ${done ? "checked" : ""}"><div class="meal-icon">${esc(icon)}</div><div><h4>${esc(time)} · ${esc(name)}</h4><p>${esc(desc)}</p><div class="progress"><i style="width:${done ? 100 : 0}%"></i></div><small>${kcal} kcal · ${prot} g protein</small></div><button class="done" data-meal="${esc(name)}" style="width:27px;height:27px;border-radius:9px;border:0;background:${done ? "#d5ff80" : "#f1f4ed"}">${done ? "✓" : "○"}</button></div>`;
             }).join("")
           : '<div class="empty"><strong>Diet data Supabase mein nahi mila</strong>Dashboard ke SQL Editor mein <code>supabase-setup.sql</code> poora run karke page reload karein.</div>';
         $("#page-diet").innerHTML = `<div class="welcome" style="min-height:135px"><div class="wtext"><div class="eyebrow" style="color:#9eaf9f">${esc(p.goal || "Muscle gain")} · ${esc(p.diet_type || "Vegetarian")}</div><h2>Roz ka fuel, <b>planned.</b></h2><p>${esc(p.age)} years · ${esc(p.height_cm)} cm · ${esc(p.weight_kg)} kg · ${esc(p.activity)}</p></div><div class="waction"><span class="tag" style="background:#ffffff19;color:white">Target · ${p.calorie_target_min}–${p.calorie_target_max} kcal</span></div></div><div class="grid macrogrid"><div class="card macro"><span>Daily calorie target</span><b>${p.calorie_target_min}–${p.calorie_target_max} kcal</b></div><div class="card macro"><span>Protein target</span><b>${p.protein_target_min}–${p.protein_target_max} g</b></div><div class="card macro"><span>Carbs target</span><b>${p.carbs_target_min}–${p.carbs_target_max} g</b></div><div class="card macro"><span>Water · Sleep</span><b>${p.water_liters_min}–${p.water_liters_max} L · ${p.sleep_hours_min}–${p.sleep_hours_max} h</b></div></div><div class="sectionhead"><div><h2>Aaj ka meal schedule</h2><p>${meals.length} / ${mealPlan.length} meals marked complete</p></div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="tag">Meal-wise estimate: ${calories.toLocaleString()} kcal · ${protein} g protein</span><button class="btn subtle" onclick="window.editDietPlan()">Edit / Add plan</button></div></div><div class="grid mealgrid">${mealsHtml}</div>${weeklyHtml}<div class="notice" style="margin-top:16px"><b>Chart values:</b> Meal-wise numbers image ke individual meal estimates se liye gaye hain. Unka sum (${calories} kcal / ${protein} g protein) image ke separate daily summary (${p.daily_summary_calories} kcal / ${p.daily_summary_protein_g} g) se match nahi karta; dono figures database mein alag rakhe hain. Yeh sample profile hai; apne liye portions adjust karein.</div>`;
         document.querySelectorAll("[data-meal]").forEach(b => b.onclick = async () => {
           const name = b.dataset.meal;
-          const found = meals.find(x => x.meal_name === name);
+          const found = meals.find(x => caseKey(x.meal_name) === caseKey(name));
           if (found) {
             const { error } = await supabase.from("meal_logs").delete().eq("id", found.id);
             if (error) return toast(error.message);
@@ -1703,15 +1706,17 @@
           return `<tr><td>${new Date(`${date}T12:00:00`).toLocaleDateString("en-IN", { day: "2-digit", month: "short", weekday: "short" })}</td><td>${records.length ? esc(plans) : "Rest / no log"}</td><td>${records.length ? `${records.length} · ${names}` : "—"}</td><td>${mealCount} / ${mealPlan.length}</td></tr>`;
         }).join("");
         const financeRows = monthTransactions.length
-          ? monthTransactions.map(x => `<tr><td>${new Date(`${x.occurred_on}T12:00:00`).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</td><td>${esc(x.title || "Entry")}</td><td>${esc({ expense: "Kharcha", income: "Income", lent: "Udhar diya", repayment: "Udhar wapas", borrowed: "Udhar liya" }[x.kind] || x.kind)}</td><td>${esc(x.category || "—")}</td><td>${esc(x.person || "—")}</td><td>${money(x.amount)}</td><td>${loanStatusText(x)}</td></tr>`).join("")
+          ? monthTransactions.map(x => `<tr><td>${new Date(`${x.occurred_on}T12:00:00`).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</td><td>${esc(capitalizeWords(x.title || "Entry"))}</td><td>${esc({ expense: "Kharcha", income: "Income", lent: "Udhar diya", repayment: "Udhar wapas", borrowed: "Udhar liya" }[x.kind] || x.kind)}</td><td>${esc(capitalizeWords(x.category || "—"))}</td><td>${esc(capitalizeWords(x.person || "—"))}</td><td>${money(x.amount)}</td><td>${loanStatusText(x)}</td></tr>`).join("")
           : '<tr><td colspan="7" class="empty">Is month mein koi money entry nahi hai.</td></tr>';
         const monthLabel = new Date(year, month - 1, 1).toLocaleDateString("en-IN", { month: "long", year: "numeric" });
         const netMovement = income + repayment + borrowed + lentReturnedInMonth - expense - lent - borrowedRepaidInMonth;
         const expenseByCategory = Object.entries(monthTransactions.filter(x => x.kind === "expense").reduce((acc, x) => {
-          const key = (x.category || "Other").trim() || "Other";
-          acc[key] = (acc[key] || 0) + Number(x.amount || 0);
+          const key = capitalizeWords(x.category || "Other") || "Other";
+          const normalizedKey = caseKey(key);
+          acc[normalizedKey] ||= { label: key, amount: 0 };
+          acc[normalizedKey].amount += Number(x.amount || 0);
           return acc;
-        }, {})).sort((a,b) => b[1] - a[1]);
+        }, {})).map(([key, value]) => [value.label, value.amount]).sort((a,b) => b[1] - a[1]);
         const pieColors = ["#eaa47d", "#718fce", "#9e69b4", "#4b9d86", "#d1aa48", "#db6c70", "#71808d"];
         let pieCursor = 0;
         const pieStops = expenseByCategory.length ? expenseByCategory.map(([_, amount], i) => {
@@ -1729,7 +1734,7 @@
         const currentWorkout = plan[currentWorkoutDay - 1];
         const currentMealsSnapshot = mealPlan.map(([time, name, icon, description]) => {
           const slot = name === "Evening oats" ? "Evening meal" : name;
-          const variation = dietOverrideActive ? null : weeklyVariations.find(x => x.weekday_number === (new Date().getDay() || 7) && x.meal_slot === slot);
+          const variation = dietOverrideActive ? null : weeklyVariations.find(x => x.weekday_number === (new Date().getDay() || 7) && caseKey(x.meal_slot) === caseKey(slot));
           return `<div class="txrow"><div class="txico">${esc(icon)}</div><div><b>${esc(time)} · ${esc(name)}</b><small>${esc(variation?.description || description)}</small></div></div>`;
         }).join("");
         const planSnapshotHtml = `<div class="grid dashgrid"><div class="card"><div class="card-title"><h3>Aaj ka workout plan · Day ${currentWorkoutDay}${currentWorkout ? ` · ${esc(currentWorkout[0])}` : ""}</h3><small>Latest saved plan</small></div>${currentWorkout ? currentWorkout[2].map(([name, reps]) => `<div class="txrow"><div class="txico">◉</div><div><b>${esc(name)}</b><small>${esc(reps)}</small></div></div>`).join("") : '<div class="empty">Workout plan load nahi hua.</div>'}</div><div class="card"><div class="card-title"><h3>Aaj ka diet plan</h3><small>Latest saved plan</small></div>${currentMealsSnapshot || '<div class="empty">Diet plan load nahi hua.</div>'}</div></div>`;
@@ -1759,7 +1764,7 @@
         $("#cancelModal").onclick = closeModal;
         $("#planEditorForm").onsubmit = async e => {
           e.preventDefault();
-          const data = [...document.querySelectorAll(".workout-edit-row")].map(row => ({ name: row.querySelector(".ex-name").value.trim(), prescription: row.querySelector(".ex-reps").value.trim() })).filter(x => x.name);
+          const data = [...document.querySelectorAll(".workout-edit-row")].map(row => ({ name: capitalizeWords(row.querySelector(".ex-name").value), prescription: capitalizeWords(row.querySelector(".ex-reps").value) })).filter(x => x.name);
           if (!data.length) return toast("Kam se kam ek exercise rakhein");
           await savePlanOverride("workout", activeDay, data);
         };
@@ -1778,7 +1783,7 @@
         $("#cancelModal").onclick = closeModal;
         $("#planEditorForm").onsubmit = async e => {
           e.preventDefault();
-          const data = [...document.querySelectorAll(".diet-edit-row")].map(row => ({ key: row.dataset.key, time: row.querySelector(".meal-time-input").value.trim(), name: row.querySelector(".meal-name-input").value.trim(), icon: row.querySelector(".meal-icon-input").value.trim() || "🍽️", description: row.querySelector(".meal-desc-input").value.trim(), calories: Number(row.querySelector(".meal-cal-input").value || 0), protein: Number(row.querySelector(".meal-protein-input").value || 0) })).filter(x => x.name);
+          const data = [...document.querySelectorAll(".diet-edit-row")].map(row => ({ key: row.dataset.key, time: row.querySelector(".meal-time-input").value.trim(), name: capitalizeWords(row.querySelector(".meal-name-input").value), icon: row.querySelector(".meal-icon-input").value.trim() || "🍽️", description: capitalizeWords(row.querySelector(".meal-desc-input").value), calories: Number(row.querySelector(".meal-cal-input").value || 0), protein: Number(row.querySelector(".meal-protein-input").value || 0) })).filter(x => x.name);
           if (!data.length) return toast("Kam se kam ek meal rakhein");
           await savePlanOverride("diet", null, data);
         };
@@ -1846,10 +1851,10 @@
             kind: $("#txKind").value,
             amount: +$("#txAmount").value,
             occurred_on: $("#txDate").value,
-            title: $("#txTitle").value.trim(),
-            category: $("#txCategory").value,
-            person: $("#txPerson").value.trim() || null,
-            note: $("#txNote").value.trim() || null,
+            title: capitalizeWords($("#txTitle").value),
+            category: capitalizeWords($("#txCategory").value),
+            person: capitalizeWords($("#txPerson").value) || null,
+            note: capitalizeWords($("#txNote").value) || null,
           };
           $("#saveTxn").disabled = true;
           let { data, error } = await supabase
