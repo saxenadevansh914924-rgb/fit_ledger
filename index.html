@@ -1,0 +1,1931 @@
+<!doctype html>
+<html lang="hi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#101713" />
+    <title>FitLedger — Gym & Paisa</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #f4f5f1;
+        --paper: #fff;
+        --ink: #17221c;
+        --muted: #7b877e;
+        --line: #e7ebe5;
+        --green: #c5f36b;
+        --deep: #14231a;
+        --lime: #d5ff80;
+        --red: #ed795f;
+        --shadow: 0 12px 40px #1930210b;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "DM Sans", sans-serif;
+      }
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+      button {
+        cursor: pointer;
+      }
+      .app {
+        display: grid;
+        grid-template-columns: 244px minmax(0, 1fr);
+        min-height: 100vh;
+      }
+      .side {
+        background: var(--deep);
+        color: #fff;
+        padding: 27px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 0 8px;
+        font-family: Manrope;
+        font-size: 20px;
+        font-weight: 800;
+        letter-spacing: -0.7px;
+      }
+      .brand-mark {
+        width: 38px;
+        height: 38px;
+        border-radius: 13px;
+        background: var(--lime);
+        display: grid;
+        place-items: center;
+        color: var(--deep);
+        font-size: 21px;
+      }
+      .brand small {
+        display: block;
+        color: #94a39a;
+        font: 500 10px "DM Sans";
+        letter-spacing: 1.3px;
+        margin-top: 2px;
+      }
+      .nav-label {
+        font-size: 10px;
+        letter-spacing: 1.5px;
+        color: #7e9185;
+        padding: 0 12px;
+        margin-bottom: 8px;
+      }
+      .nav {
+        display: grid;
+        gap: 5px;
+      }
+      .nav button {
+        border: 0;
+        background: none;
+        color: #aab7ae;
+        text-align: left;
+        padding: 12px 13px;
+        border-radius: 11px;
+        font-size: 13px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: 0.2s;
+      }
+      .nav button span {
+        font-size: 17px;
+        width: 20px;
+        text-align: center;
+      }
+      .nav button.active,
+      .nav button:hover {
+        background: #27382d;
+        color: white;
+      }
+      .nav button.active {
+        box-shadow: inset 3px 0 var(--lime);
+      }
+      .side-bottom {
+        margin-top: auto;
+      }
+      .userbox {
+        padding: 14px 9px;
+        border-top: 1px solid #334339;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .avatar {
+        width: 34px;
+        height: 34px;
+        background: #344638;
+        color: var(--lime);
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+      }
+      .userbox div:nth-child(2) {
+        min-width: 0;
+        flex: 1;
+      }
+      .userbox b {
+        font-size: 12px;
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .userbox small {
+        font-size: 10px;
+        color: #94a39a;
+      }
+      .logout {
+        background: none;
+        border: 0;
+        color: #9ba99e;
+        font-size: 18px;
+      }
+      .main {
+        padding: 28px clamp(20px, 4vw, 56px) 54px;
+        max-width: 1600px;
+        width: 100%;
+        margin: auto;
+      }
+      .topline {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 28px;
+      }
+      .eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: #7b877e;
+        font-size: 10px;
+        font-weight: 700;
+      }
+      .topline h1 {
+        font: 800 27px Manrope;
+        margin: 5px 0 0;
+        letter-spacing: -1px;
+      }
+      .date-chip {
+        background: white;
+        border: 1px solid var(--line);
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-size: 12px;
+        color: #46534a;
+      }
+      .page {
+        display: none;
+      }
+      .page.active {
+        display: block;
+      }
+      .welcome {
+        background: var(--deep);
+        color: white;
+        border-radius: 20px;
+        padding: 27px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 21px;
+        min-height: 158px;
+      }
+      .welcome:after {
+        content: "✳";
+        font-size: 210px;
+        position: absolute;
+        right: 23%;
+        top: -72px;
+        color: #ffffff08;
+        line-height: 1;
+      }
+      .welcome h2 {
+        font: 800 24px Manrope;
+        margin: 0 0 8px;
+        letter-spacing: -0.7px;
+      }
+      .welcome p {
+        margin: 0;
+        color: #b1beb5;
+        font-size: 13px;
+      }
+      .welcome b {
+        color: var(--lime);
+      }
+      .welcome .wtext {
+        position: relative;
+        z-index: 1;
+      }
+      .welcome .waction {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        gap: 9px;
+      }
+      .btn {
+        border: 0;
+        padding: 11px 15px;
+        border-radius: 10px;
+        background: var(--lime);
+        color: var(--deep);
+        font-size: 12px;
+        font-weight: 800;
+      }
+      .btn.ghost {
+        background: #ffffff13;
+        border: 1px solid #ffffff2c;
+        color: #fff;
+      }
+      .grid {
+        display: grid;
+        gap: 15px;
+      }
+      .stats {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        margin-bottom: 20px;
+      }
+      .card {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 18px;
+        box-shadow: var(--shadow);
+      }
+      .stat-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .stat-icon {
+        width: 31px;
+        height: 31px;
+        border-radius: 10px;
+        background: #f1f5ea;
+        display: grid;
+        place-items: center;
+        font-size: 15px;
+      }
+      .stat-value {
+        font: 800 24px Manrope;
+        letter-spacing: -0.7px;
+        margin: 16px 0 3px;
+      }
+      .stat-note {
+        font-size: 10px;
+        color: var(--muted);
+      }
+      .pos {
+        color: #4e963e;
+      }
+      .neg {
+        color: #dc6856;
+      }
+      .dashgrid {
+        grid-template-columns: 1.2fr 0.8fr;
+        align-items: stretch;
+      }
+      .card-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+      .card-title h3 {
+        font: 800 14px Manrope;
+        margin: 0;
+      }
+      .card-title small {
+        font-size: 10px;
+        color: var(--muted);
+      }
+      .bars {
+        height: 157px;
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 12px;
+        border-bottom: 1px solid var(--line);
+        padding: 0 8px;
+        position: relative;
+      }
+      .bars:before,
+      .bars:after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        border-top: 1px dashed #e8ece6;
+        top: 33%;
+      }
+      .bars:after {
+        top: 66%;
+      }
+      .bar-col {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: end;
+        gap: 8px;
+        z-index: 1;
+        flex: 1;
+      }
+      .bar-pair {
+        display: flex;
+        align-items: end;
+        gap: 4px;
+        height: 83%;
+        width: 100%;
+        justify-content: center;
+      }
+      .bar {
+        width: min(17px, 38%);
+        border-radius: 5px 5px 2px 2px;
+        background: #d8e6c8;
+        min-height: 3px;
+      }
+      .bar.in {
+        background: #c5f36b;
+      }
+      .bar.out {
+        background: #25392c;
+      }
+      .bar-col small {
+        font-size: 9px;
+        color: var(--muted);
+      }
+      .legend {
+        display: flex;
+        gap: 17px;
+        margin-top: 12px;
+        font-size: 10px;
+        color: var(--muted);
+      }
+      .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 5px;
+      }
+      .quick {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 9px;
+      }
+      .quick button {
+        padding: 14px 12px;
+        background: #f7f8f4;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        text-align: left;
+        color: var(--ink);
+        font-size: 11px;
+        font-weight: 700;
+      }
+      .quick button span {
+        display: block;
+        font-size: 19px;
+        margin-bottom: 9px;
+      }
+      .activity {
+        margin-top: 18px;
+      }
+      .txrow {
+        display: grid;
+        grid-template-columns: 36px 1fr auto;
+        gap: 10px;
+        align-items: center;
+        padding: 11px 0;
+        border-bottom: 1px solid #eef0ec;
+      }
+      .txrow:last-child {
+        border: 0;
+      }
+      .txico {
+        height: 34px;
+        width: 34px;
+        border-radius: 10px;
+        background: #f2f5ee;
+        display: grid;
+        place-items: center;
+      }
+      .txrow b {
+        font-size: 11px;
+        display: block;
+      }
+      .txrow small {
+        font-size: 9px;
+        color: var(--muted);
+      }
+      .txamt {
+        font-size: 12px;
+        font-weight: 800;
+      }
+      .money-filters {
+        display: grid;
+        grid-template-columns: minmax(180px, 1.5fr) repeat(4, minmax(125px, 1fr));
+        gap: 9px;
+        margin-bottom: 16px;
+      }
+      @media (max-width: 900px) { .money-filters { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+      .person-balance { margin-top:14px; display:flex; align-items:center; justify-content:space-between; gap:12px; background:#f4f7ef; border-color:#dce7cf; }
+      .person-balance small { color:var(--muted); font-size:10px; }
+      .person-balance-breakdown { margin-top:5px; color:var(--ink); font-size:11px; }
+      .person-balance-total { font-weight:800; font-size:16px; text-align:right; }
+      @media (max-width:600px) { .person-balance { align-items:flex-start; flex-direction:column; } .person-balance-total { text-align:left; } }
+      .loan-check {
+        grid-column: 2 / -1;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        color: var(--muted);
+        font-size: 10px;
+        cursor: pointer;
+      }
+      .loan-check input { accent-color: #83a943; }
+      @media (max-width: 600px) {
+        .money-filters { grid-template-columns: 1fr 1fr; }
+        .money-filters input[type="search"] { grid-column: 1 / -1; }
+      }
+      .toolbar {
+        display: flex;
+        gap: 9px;
+        align-items: center;
+        margin-bottom: 14px;
+      }
+      .toolbar .btn {
+        padding: 10px 14px;
+      }
+      .input {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px 12px;
+        color: var(--ink);
+        font-size: 12px;
+        outline: none;
+      }
+      .input:focus {
+        border-color: #9bc452;
+      }
+      .toolbar .input:first-child {
+        max-width: 260px;
+      }
+      .table-wrap {
+        background: white;
+        border: 1px solid var(--line);
+        border-radius: 15px;
+        overflow: auto;
+      }
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 650px;
+      }
+      .table th {
+        text-align: left;
+        padding: 13px 15px;
+        background: #f7f8f5;
+        color: #839087;
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      .table td {
+        padding: 13px 15px;
+        border-top: 1px solid #edf0ec;
+        font-size: 11px;
+      }
+      .tag {
+        display: inline-block;
+        background: #f0f4ea;
+        padding: 5px 8px;
+        border-radius: 7px;
+        font-size: 9px;
+        font-weight: 700;
+        color: #52614d;
+      }
+      .tag.income {
+        background: #ecf7e2;
+        color: #548333;
+      }
+      .tag.loan {
+        background: #fff1e8;
+        color: #b66a38;
+      }
+      .empty {
+        text-align: center;
+        padding: 55px 20px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .empty strong {
+        display: block;
+        color: var(--ink);
+        font: 800 16px Manrope;
+        margin-bottom: 7px;
+      }
+      .sectionhead {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        margin: 22px 0 14px;
+      }
+      .sectionhead h2 {
+        font: 800 18px Manrope;
+        margin: 0 0 4px;
+      }
+      .sectionhead p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 11px;
+      }
+      .workoutdays {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(110px, 1fr));
+        gap: 8px;
+        overflow: auto;
+        padding-bottom: 5px;
+      }
+      .daybtn {
+        border: 1px solid var(--line);
+        background: #fff;
+        border-radius: 12px;
+        padding: 12px 10px;
+        text-align: left;
+        min-width: 110px;
+      }
+      .daybtn.active {
+        background: var(--deep);
+        color: white;
+        border-color: var(--deep);
+      }
+      .daybtn strong {
+        display: block;
+        font-size: 11px;
+      }
+      .daybtn small {
+        font-size: 9px;
+        color: var(--muted);
+      }
+      .daybtn.active small {
+        color: #bfccbf;
+      }
+      .exercisegrid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .exercise {
+        padding: 17px;
+      }
+      .exercise-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+      }
+      .exercise h4 {
+        font: 700 13px Manrope;
+        margin: 1px 0 5px;
+      }
+      .exercise p {
+        font-size: 10px;
+        color: var(--muted);
+        margin: 0;
+      }
+      .exercise .done {
+        width: 28px;
+        height: 28px;
+        border-radius: 9px;
+        background: #f1f4ed;
+        border: 0;
+        color: #657263;
+      }
+      .exercise.checked {
+        border-color: #bde477;
+        background: #fbfff6;
+      }
+      .exercise.checked .done {
+        background: var(--lime);
+      }
+      .macrogrid {
+        grid-template-columns: repeat(4, 1fr);
+        margin-bottom: 15px;
+      }
+      .macro {
+        padding: 14px 16px;
+      }
+      .macro span {
+        font-size: 10px;
+        color: var(--muted);
+      }
+      .macro b {
+        display: block;
+        font: 800 19px Manrope;
+        margin-top: 7px;
+      }
+      .mealgrid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .meal {
+        display: grid;
+        grid-template-columns: 40px 1fr auto;
+        gap: 12px;
+        align-items: start;
+      }
+      .meal-icon {
+        height: 38px;
+        width: 38px;
+        background: #f1f5e8;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        font-size: 18px;
+      }
+      .meal h4 {
+        font: 700 12px Manrope;
+        margin: 0 0 4px;
+      }
+      .meal p {
+        font-size: 10px;
+        color: var(--muted);
+        margin: 0;
+        line-height: 1.5;
+      }
+      .meal small {
+        font-size: 9px;
+        color: #7f9a50;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .meal.checked {
+        border-color: #bfe680;
+      }
+      .meal.checked .meal-icon {
+        background: var(--lime);
+      }
+      .today-plan-grid { grid-template-columns: 1fr 1fr; margin: 18px 0; }
+      .today-list { display:grid; gap:8px; max-height:390px; overflow:auto; }
+      .today-item { display:grid; grid-template-columns:28px 1fr auto; gap:9px; align-items:center; padding:8px 9px; border-radius:10px; background:#f8f9f6; }
+      .today-item .mark { width:25px; height:25px; border-radius:8px; display:grid; place-items:center; background:#eef1e9; font-size:12px; }
+      .today-item.checked .mark { background:var(--lime); }
+      .today-item b { display:block; font-size:10px; }
+      .today-item small { color:var(--muted); font-size:9px; }
+      .today-item .meal-time { font-size:9px; color:#70806f; white-space:nowrap; }
+      .loan-status { display:inline-flex; align-items:center; gap:6px; font-size:10px; white-space:nowrap; }
+      .loan-status input { accent-color:#81ad42; width:15px; height:15px; cursor:pointer; }
+      .loan-pending { color:#b2673c; }
+      .loan-settled { color:#548333; }
+      @media (max-width:760px) { .today-plan-grid { grid-template-columns:1fr; } }
+      .progress {
+        height: 6px;
+        background: #eef1e9;
+        border-radius: 5px;
+        margin-top: 12px;
+        overflow: hidden;
+      }
+      .progress i {
+        height: 100%;
+        display: block;
+        background: #a8d75e;
+        border-radius: 5px;
+      }
+      .modal-back {
+        position: fixed;
+        inset: 0;
+        background: #10191380;
+        display: none;
+        place-items: center;
+        padding: 18px;
+        z-index: 10;
+      }
+      .modal-back.open {
+        display: grid;
+      }
+      .modal {
+        width: min(700px, 100%);
+        max-height: 90vh;
+        overflow:auto;
+        background: white;
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 25px 90px #0003;
+      }
+      .plan-editor-list { display:grid; gap:10px; max-height:46vh; overflow:auto; padding:2px; }
+      .plan-editor-row { background:#f7f8f4; border:1px solid var(--line); border-radius:12px; padding:12px; display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+      .plan-editor-row .field.wide { grid-column:1/-1; }
+      .plan-editor-row .remove-row { justify-self:end; grid-column:1/-1; }
+      .plan-editor-row textarea { min-height:54px; resize:vertical; }
+      .editor-scope { display:flex; gap:10px; align-items:center; flex-wrap:wrap; background:#f0f4e9; padding:10px 12px; border-radius:10px; margin-top:12px; }
+      .editor-scope label { font-size:11px; font-weight:700; }
+      @media(max-width:460px) { .plan-editor-row { grid-template-columns:1fr; } .plan-editor-row .field.wide { grid-column:auto; } }
+      .modal h2 {
+        font: 800 18px Manrope;
+        margin: 0 0 5px;
+      }
+      .modal p {
+        color: var(--muted);
+        font-size: 11px;
+        margin: 0 0 19px;
+      }
+      .formgrid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 11px;
+      }
+      .field {
+        display: grid;
+        gap: 6px;
+      }
+      .field.full {
+        grid-column: 1/-1;
+      }
+      .field label {
+        font-size: 10px;
+        font-weight: 700;
+        color: #657168;
+      }
+      .field input,
+      .field select {
+        width: 100%;
+      }
+      .modal-actions {
+        display: flex;
+        justify-content: end;
+        gap: 8px;
+        margin-top: 19px;
+      }
+      .btn.subtle {
+        background: #f1f3ee;
+        color: #5c685e;
+      }
+      .toast {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translate(-50%, 20px);
+        opacity: 0;
+        background: #18271d;
+        color: white;
+        padding: 11px 16px;
+        border-radius: 10px;
+        font-size: 12px;
+        transition: 0.25s;
+        z-index: 20;
+      }
+      .toast.show {
+        transform: translate(-50%, 0);
+        opacity: 1;
+      }
+      .auth {
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        background: #f5f6f1;
+      }
+      .auth-art {
+        background: #15241a;
+        color: white;
+        padding: 56px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+        overflow: hidden;
+      }
+      .auth-art:before {
+        content: "";
+        position: absolute;
+        width: 500px;
+        height: 500px;
+        border-radius: 50%;
+        border: 1px solid #ffffff1b;
+        right: -180px;
+        top: 25%;
+      }
+      .auth-art:after {
+        content: "";
+        position: absolute;
+        width: 340px;
+        height: 340px;
+        border-radius: 50%;
+        border: 1px solid #ffffff18;
+        right: -100px;
+        top: 34%;
+      }
+      .auth-copy {
+        position: relative;
+        z-index: 1;
+        max-width: 460px;
+      }
+      .auth-copy h1 {
+        font: 800 clamp(34px, 5vw, 58px)/1.05 Manrope;
+        letter-spacing: -2px;
+        margin: 0 0 17px;
+      }
+      .auth-copy h1 em {
+        color: var(--lime);
+        font-style: normal;
+      }
+      .auth-copy p {
+        font-size: 14px;
+        line-height: 1.7;
+        color: #afbbb2;
+      }
+      .auth-features {
+        display: flex;
+        gap: 18px;
+        font-size: 10px;
+        color: #afbbb2;
+      }
+      .auth-form-wrap {
+        display: grid;
+        place-items: center;
+        padding: 32px;
+      }
+      .auth-form {
+        width: min(370px, 100%);
+      }
+      .auth-form h2 {
+        font: 800 25px Manrope;
+        margin: 0 0 7px;
+      }
+      .auth-form > p {
+        font-size: 12px;
+        color: var(--muted);
+        margin: 0 0 24px;
+      }
+      .auth-form .field {
+        margin-bottom: 13px;
+      }
+      .auth-form input {
+        padding: 13px;
+      }
+      .auth-submit {
+        width: 100%;
+        padding: 13px;
+        margin-top: 5px;
+      }
+      .auth-switch {
+        text-align: center;
+        margin-top: 18px;
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .auth-switch button {
+        background: none;
+        border: 0;
+        color: #537833;
+        font-weight: 800;
+      }
+      .notice {
+        background: #f0f4e9;
+        padding: 11px;
+        border-radius: 10px;
+        color: #5e6f50;
+        font-size: 10px;
+        line-height: 1.5;
+        margin-bottom: 15px;
+      }
+      @media (max-width: 1050px) {
+        .stats {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .exercisegrid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (max-width: 760px) {
+        .app {
+          display: block;
+          padding-bottom: 65px;
+        }
+        .side {
+          height: auto;
+          position: fixed;
+          top: auto;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          z-index: 8;
+          padding: 7px 8px;
+          background: #14231af2;
+          backdrop-filter: blur(14px);
+        }
+        .brand,
+        .nav-label,
+        .side-bottom {
+          display: none;
+        }
+        .nav {
+          grid-template-columns: repeat(6, 1fr);
+          gap: 2px;
+        }
+        .nav button {
+          padding: 7px 3px;
+          justify-content: center;
+          flex-direction: column;
+          gap: 3px;
+          font-size: 8px;
+        }
+        .nav button span {
+          font-size: 16px;
+        }
+        .nav button.active {
+          box-shadow: inset 0 -2px var(--lime);
+        }
+        .main {
+          padding: 20px 15px 35px;
+        }
+        .topline h1 {
+          font-size: 23px;
+        }
+        .date-chip {
+          font-size: 10px;
+          padding: 8px;
+        }
+        .welcome {
+          padding: 22px;
+          min-height: 170px;
+          align-items: start;
+          flex-direction: column;
+          gap: 17px;
+        }
+        .welcome h2 {
+          font-size: 20px;
+        }
+        .welcome .waction {
+          align-self: flex-end;
+        }
+        .stats {
+          gap: 9px;
+        }
+        .card {
+          padding: 14px;
+        }
+        .stat-value {
+          font-size: 21px;
+        }
+        .dashgrid,
+        .mealgrid {
+          grid-template-columns: 1fr;
+        }
+        .exercisegrid {
+          grid-template-columns: 1fr 1fr;
+        }
+        .macrogrid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .sectionhead {
+          align-items: start;
+          gap: 10px;
+          flex-direction: column;
+        }
+        .auth {
+          grid-template-columns: 1fr;
+        }
+        .auth-art {
+          display: none;
+        }
+        .auth-form-wrap {
+          min-height: 100vh;
+        }
+        .toolbar {
+          flex-wrap: wrap;
+        }
+        .toolbar .input:first-child {
+          flex: 1;
+        }
+        .formgrid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media (max-width: 420px) {
+        .exercisegrid {
+          grid-template-columns: 1fr;
+        }
+        .stats {
+          grid-template-columns: 1fr 1fr;
+        }
+        .topline h1 {
+          font-size: 20px;
+        }
+      }
+      .report-conclusion { margin-top:18px; }
+      .report-chart-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+      .report-bar-row { display:grid; grid-template-columns:110px 1fr auto; gap:8px; align-items:center; margin:9px 0; font-size:10px; }
+      .report-bar-track { height:11px; border-radius:8px; background:#edf0e9; overflow:hidden; }
+      .report-bar-fill { height:100%; border-radius:8px; background:#8dbb4b; print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+      .report-bar-fill.out { background:#d58962; }
+      .report-pie-wrap { display:flex; align-items:center; gap:14px; }
+      .report-pie { width:112px; height:112px; flex:0 0 112px; border-radius:50%; background:conic-gradient(#eaa47d 0% 100%); print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+      .report-legend { display:grid; gap:5px; font-size:9px; }
+      .report-legend-item { display:flex; gap:6px; align-items:center; }
+      .report-swatch { width:9px; height:9px; border-radius:3px; flex:0 0 9px; print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+      @media (max-width:600px) { .report-chart-grid { grid-template-columns:1fr; } }
+      @page { size: A4; margin: 12mm; }
+      @media print {
+        body { background:#fff; color:#111; }
+        .side, .topline, .no-print, .toast, .modal-back { display:none !important; }
+        .app { display:block; min-height:0; }
+        .main { max-width:none; width:100%; margin:0; padding:0; }
+        .page { display:none !important; }
+        .page.active { display:block !important; }
+        .card, .welcome { box-shadow:none !important; break-inside:avoid; }
+        .table-wrap { box-shadow:none !important; overflow:visible !important; break-inside:auto; }
+        .summary-daily-table tr { break-inside:avoid; }
+        .welcome { background:#14231a !important; print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+        .table { min-width:0; }
+        .table th, .table td { padding:6px 7px; font-size:8px; }
+        .summary-daily-table { min-width:0; }
+        .summary-daily-table td { vertical-align:top; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <div class="toast" id="toast"></div>
+    <div class="modal-back" id="modalBack">
+      <div class="modal" id="modal"></div>
+    </div>
+    <script type="module">
+      import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+      const SUPABASE_URL = "https://koiwocybjmrvrxopvckd.supabase.co";
+      const SUPABASE_KEY = "sb_publishable_6hItENblKi21RTTTS9TMlQ_L-B9mAOc";
+      const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+      const $ = (s) => document.querySelector(s);
+      const today = () => {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      };
+      let user = null,
+        transactions = [],
+        transactionsError = null,
+        workouts = [],
+        workoutHistory = [],
+        meals = [],
+        mealHistory = [],
+        weeklyVariations = [],
+        planOverrides = [],
+        dietOverrideActive = false,
+        planEditorError = null,
+        referenceDataError = null,
+        activeDay = new Date().getDay() || 7,
+        page = "home",
+        filter = "",
+        moneyMonthFilter = "",
+        moneyPersonFilter = "",
+        moneyCategoryFilter = "",
+        summaryMonth = today().slice(0, 7);
+      let plan = [
+        [
+          "Push A",
+          "Chest • Shoulder • Triceps",
+          [
+            ["Barbell Bench Press", "3 × 8–12"],
+            ["Incline Dumbbell Press", "3 × 8–12"],
+            ["Dumbbell Shoulder Press", "2 × 8–12"],
+            ["Lateral Raises", "3 × 12–15"],
+            ["Triceps Pushdown", "3 × 10–12"],
+            ["Overhead Triceps Extension", "2 × 10–12"],
+          ],
+        ],
+        [
+          "Pull A",
+          "Back • Biceps",
+          [
+            ["Lat Pulldown", "3 × 8–12"],
+            ["Seated Cable Row", "3 × 8–12"],
+            ["Chest-Supported Row", "2 × 10–12"],
+            ["Face Pulls", "2 × 12–15"],
+            ["Dumbbell Curls", "3 × 10–12"],
+            ["Hammer Curls", "2 × 10–12"],
+          ],
+        ],
+        [
+          "Legs A",
+          "Legs • Abs",
+          [
+            ["Leg Press", "3 × 10–12"],
+            ["Goblet Squat", "3 × 8–12"],
+            ["Leg Curl", "3 × 10–12"],
+            ["Calf Raises", "3 × 12–15"],
+            ["Plank", "3 × 30–60 sec"],
+            ["Dead Bug", "2 × 10 each side"],
+          ],
+        ],
+        [
+          "Push B",
+          "Chest • Shoulder • Triceps",
+          [
+            ["Incline Dumbbell Press", "3 × 8–12"],
+            ["Machine Chest Press", "3 × 10–12"],
+            ["Cable Chest Fly", "2 × 12–15"],
+            ["Lateral Raises", "3 × 12–15"],
+            ["Overhead Triceps Extension", "2 × 10–12"],
+            ["Triceps Pushdown", "3 × 10–12"],
+          ],
+        ],
+        [
+          "Pull B",
+          "Back • Biceps",
+          [
+            ["Neutral Grip Lat Pulldown", "3 × 8–12"],
+            ["Seated Cable Row", "3 × 8–12"],
+            ["Straight Arm Pulldown", "2 × 12–15"],
+            ["Rear Delt Fly", "2 × 12–15"],
+            ["EZ Bar Curl", "3 × 10–12"],
+            ["Hammer Curls", "2 × 10–12"],
+          ],
+        ],
+        [
+          "Legs B",
+          "Legs • Abs",
+          [
+            ["Goblet Squat", "3 × 10–12"],
+            ["Leg Extension", "3 × 10–15"],
+            ["Leg Curl", "3 × 10–12"],
+            ["Hip Thrust", "2 × 10–15"],
+            ["Calf Raises", "3 × 12–15"],
+            ["Reverse Crunch", "2 × 10–15"],
+          ],
+        ],
+        [
+          "Home",
+          "Dumbbells • Core",
+          [
+            ["Dumbbell Floor Press", "3 × 10–15"],
+            ["Alternating Dumbbell Curl", "2 × 10–12 each"],
+            ["Dumbbell Lateral Raises", "2 × 12–15"],
+            ["Bent-Over Dumbbell Reverse Fly", "2 × 12–15"],
+            ["Dead Bug", "2 × 10 each side"],
+            ["Forearm Plank", "2 × 30–45 sec"],
+          ],
+        ],
+      ];
+      let mealPlan = [
+        [
+          "5:20 AM",
+          "Pre-workout",
+          "🍌",
+          "1 medium banana • 300–500 ml water",
+          100,
+          1,
+        ],
+        [
+          "7:30 AM",
+          "Post-workout shake",
+          "🥤",
+          "300 ml milk • 40 g oats • banana • 15 g peanut butter",
+          550,
+          18,
+        ],
+        [
+          "8:30 AM",
+          "Breakfast",
+          "🍳",
+          "4 eggs (or paneer) • 2 roti • 200 ml milk • fruit",
+          400,
+          20,
+        ],
+        [
+          "12:45 PM",
+          "Lunch",
+          "🍛",
+          "3 roti • dal • sabzi • dahi • soya chunks",
+          550,
+          18,
+        ],
+        [
+          "4:40 PM",
+          "Evening oats",
+          "🥣",
+          "50 g oats • 250 ml milk • banana • 5 almonds",
+          420,
+          12,
+        ],
+        [
+          "7:30 PM",
+          "Dinner",
+          "🥗",
+          "3 roti or rice • paneer / 2–3 eggs • sabzi • salad",
+          400,
+          11,
+        ],
+        ["9:30 PM", "Before sleep", "🥛", "200 ml milk • 5–8 almonds", 200, 4],
+      ];
+      let dietProfile = {
+        id: 1, age: 21, height_cm: 173, weight_kg: 49,
+        goal: "Muscle gain + abs", diet_type: "Vegetarian (eggs allowed)",
+        activity: "College + morning gym", calorie_target_min: 2500,
+        calorie_target_max: 2700, protein_target_min: 75,
+        protein_target_max: 90, carbs_target_min: 350, carbs_target_max: 400,
+        fats_target_min: 65, fats_target_max: 75, water_liters_min: 3,
+        water_liters_max: 4, sleep_hours_min: 7, sleep_hours_max: 9,
+        daily_summary_calories: 2620, daily_summary_protein_g: 84,
+      };
+      function esc(s = "") {
+        return String(s).replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+      }
+      function money(n) {
+        return (
+          "₹" +
+          Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })
+        );
+      }
+      function loanStatusText(t) {
+        if (t.kind !== "lent" && t.kind !== "borrowed") return "—";
+        if (!t.is_settled) return t.kind === "lent" ? "Milna baaki" : "Dena baaki";
+        const label = t.kind === "lent" ? "Wapas mila" : "Wapas kiya";
+        return t.settled_on
+          ? `${label} · ${new Date(`${t.settled_on}T12:00:00`).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}`
+          : label;
+      }
+      function toast(s) {
+        $("#toast").textContent = s;
+        $("#toast").classList.add("show");
+        setTimeout(() => $("#toast").classList.remove("show"), 2400);
+      }
+      function authScreen() {
+        document.body.innerHTML = `<section class="auth"><div class="auth-art"><div class="brand"><div class="brand-mark">✳</div><div>fitledger<small>TRAIN WELL. SPEND WISE.</small></div></div><div class="auth-copy"><h1>Strong body.<br><em>Clear money.</em></h1><p>Gym routine, daily kharcha aur diet — sab ek simple jagah par. Apni progress ko track karo, roz thoda behtar bano.</p></div><div class="auth-features"><span>✳ Workout tracker</span><span>↗ Paisa history</span><span>♡ Diet routine</span></div></div><div class="auth-form-wrap"><form class="auth-form" id="authForm"><div class="eyebrow">FITLEDGER ACCOUNT</div><h2 id="authTitle">Wapas aaiye 👋</h2><p id="authSub">Username aur password se login karein.</p><div class="notice">Apna username khud chunein. Email ya confirmation link ki zaroorat nahi.</div><div class="field"><label>Username</label><input class="input" id="username" type="text" placeholder="jaise rahul_fit" minlength="3" maxlength="24" pattern="[A-Za-z0-9_.-]{3,24}" autocomplete="username" required></div><div class="field"><label>Password</label><input class="input" id="password" type="password" placeholder="Kam se kam 6 characters" minlength="6" autocomplete="current-password" required></div><button class="btn auth-submit" id="authSubmit">Login karein →</button><div class="auth-switch"><span id="switchText">Naya account hai?</span> <button type="button" id="switchAuth">Sign up</button></div><div id="authError" style="color:#c45746;font-size:11px;margin-top:12px"></div></form></div></section>`;
+        let signup = false;
+        $("#switchAuth").onclick = () => {
+          signup = !signup;
+          $("#authTitle").textContent = signup
+            ? "Account banayein ✨"
+            : "Wapas aaiye 👋";
+          $("#authSub").textContent = signup
+            ? "Free account banane ke liye details bharein."
+            : "Apne account mein sign in karein.";
+          $("#authSubmit").textContent = signup
+            ? "Sign up karein →"
+            : "Login karein →";
+          $("#switchText").textContent = signup
+            ? "Pehle se account hai?"
+            : "Naya account hai?";
+          $("#switchAuth").textContent = signup ? "Login" : "Sign up";
+          $("#password").autocomplete = signup ? "new-password" : "current-password";
+          $("#authError").textContent = "";
+          $("#authError").style.color = "#c45746";
+        };
+        $("#authForm").onsubmit = async (e) => {
+          e.preventDefault();
+          const username = $("#username").value.trim().toLowerCase();
+          const email = `${username}@fitledger.invalid`;
+          let password = $("#password").value;
+          $("#authSubmit").disabled = true;
+          const submitLabel = signup ? "Sign up karein →" : "Login karein →";
+          $("#authSubmit").textContent = signup ? "Account ban raha hai…" : "Login ho raha hai…";
+          $("#authError").textContent = "";
+          $("#authError").style.color = "#c45746";
+          let result;
+          try {
+            result = signup
+              ? await supabase.auth.signUp({
+                  email,
+                  password,
+                  options: { data: { username } },
+                })
+              : await supabase.auth.signInWithPassword({ email, password });
+          } catch (err) {
+            result = { error: err };
+          }
+          $("#authSubmit").disabled = false;
+          $("#authSubmit").textContent = submitLabel;
+          const { data, error } = result;
+          if (error) {
+            const msg = (error.message || "").toLowerCase();
+            if (msg.includes("rate limit") || msg.includes("email rate")) {
+              $("#authError").innerHTML = `Signup Supabase par confirmation email limit ki wajah se ruk raha hai. Pehle <a href="https://supabase.com/dashboard/project/koiwocybjmrvrxopvckd/auth/providers" target="_blank" rel="noopener noreferrer">Auth settings kholein</a>, Email provider mein <b>Confirm email OFF</b> karein, phir signup retry karein. Jab tak yeh setting off nahi hogi, yeh page email limit bypass nahi kar sakta.`;
+            } else if (msg.includes("already registered") || msg.includes("already been registered")) {
+              $("#authError").textContent = "Yeh username pehle se bana hua hai. Login karein ya doosra username chunein.";
+            } else if (msg.includes("invalid login credentials")) {
+              $("#authError").textContent = "Username ya password sahi nahi hai. Dobara check karein.";
+            } else if (msg.includes("email not confirmed")) {
+              $("#authError").textContent = "Is username ka purana account confirmation par atka hai. Supabase Dashboard → Authentication → Users mein us user ko confirm karein, phir login karein.";
+            } else if (msg.includes("email logins are disabled") || msg.includes("email provider is disabled") || msg.includes("email signups are disabled")) {
+              $("#authError").innerHTML = `Username/password login ke liye Supabase ka Email provider enabled hona zaroori hai. <a href="https://supabase.com/dashboard/project/koiwocybjmrvrxopvckd/auth/providers" target="_blank" rel="noopener noreferrer">Auth provider settings kholein</a> → Email ko ON karein, lekin <b>Confirm email OFF</b> hi rakhein. Website par user se email nahi maanga jayega.`;
+            } else {
+              $("#authError").textContent = error.message || "Abhi request complete nahi hui. Thodi der baad try karein.";
+            }
+            return;
+          }
+          if (signup && !data.session) {
+            $("#authError").innerHTML =
+              `Account bana hai, lekin confirmation abhi required hai. <a href="https://supabase.com/dashboard/project/koiwocybjmrvrxopvckd/auth/providers" target="_blank" rel="noopener noreferrer">Auth settings kholein</a> aur Email provider mein <b>Confirm email OFF</b> karein. Is username ka pending account ho to Auth → Users mein usse confirm karke phir login karein.`;
+            return;
+          }
+          user = data.user;
+          await boot();
+        };
+      }
+      function shell() {
+        const username = user.user_metadata?.username || (user.email || "user").split("@")[0];
+        document.body.innerHTML = `<div class="app"><aside class="side"><div class="brand"><div class="brand-mark">✳</div><div>fitledger<small>TRAIN WELL. SPEND WISE.</small></div></div><div><div class="nav-label">WORKSPACE</div><nav class="nav"><button data-page="home" class="active"><span>⌂</span>Overview</button><button data-page="money"><span>↗</span>Money</button><button data-page="workout"><span>◉</span>Workout</button><button data-page="diet"><span>♡</span>Diet plan</button><button data-page="history"><span>▤</span>History</button><button data-page="summary"><span>▥</span>Summary</button></nav></div><div class="side-bottom"><div class="userbox"><div class="avatar">${esc(username[0].toUpperCase())}</div><div><b>${esc(username)}</b><small>Personal account</small></div><button class="logout" id="logout" title="Logout">↪</button></div></div></aside><main class="main"><div class="topline"><div><div class="eyebrow">YOUR PERSONAL DASHBOARD</div><h1 id="pageTitle">Overview</h1></div><div class="date-chip">◷ &nbsp;${new Date().toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}</div></div><section class="page active" id="page-home"></section><section class="page" id="page-money"></section><section class="page" id="page-workout"></section><section class="page" id="page-diet"></section><section class="page" id="page-history"></section><section class="page" id="page-summary"></section></main></div><div class="toast" id="toast"></div><div class="modal-back" id="modalBack"><div class="modal" id="modal"></div></div>`;
+        document
+          .querySelectorAll(".nav button")
+          .forEach((b) => (b.onclick = () => showPage(b.dataset.page)));
+        $("#logout").onclick = async () => {
+          await supabase.auth.signOut();
+          user = null;
+          authScreen();
+        };
+      }
+      function showPage(p) {
+        page = p;
+        document
+          .querySelectorAll(".nav button")
+          .forEach((b) => b.classList.toggle("active", b.dataset.page === p));
+        document
+          .querySelectorAll(".page")
+          .forEach((x) => x.classList.toggle("active", x.id === "page-" + p));
+        $("#pageTitle").textContent = {
+          home: "Overview",
+          money: "Money tracker",
+          workout: "Workout plan",
+          diet: "Diet & nutrition",
+          history: "Your history",
+          summary: "Monthly summary",
+        }[p];
+        render();
+      }
+      async function loadData() {
+        const [a, b, c, daysResult, profileResult, mealsResult, weeklyResult, overridesResult] = await Promise.all([
+          supabase.from("transactions").select("*").order("occurred_on", { ascending: false }),
+          supabase.from("workout_logs").select("*").order("log_date", { ascending: false }),
+          supabase.from("meal_logs").select("*").order("log_date", { ascending: false }),
+          supabase.from("workout_days").select("day_number,title,focus,workout_exercises(exercise_order,name,prescription)").order("day_number"),
+          supabase.from("diet_profiles").select("*").eq("id", 1).maybeSingle(),
+          supabase.from("diet_meals").select("*").order("sort_order"),
+          supabase.from("diet_weekly_variations").select("*").order("weekday_number").order("slot_order"),
+          supabase.from("user_plan_overrides").select("*").eq("user_id", user.id),
+        ]);
+        transactionsError = a.error || null;
+        transactions = a.error ? [] : a.data || [];
+        workoutHistory = b.error ? [] : b.data || [];
+        workouts = workoutHistory.filter((x) => x.log_date === today());
+        mealHistory = c.error ? [] : c.data || [];
+        meals = mealHistory.filter((x) => x.log_date === today());
+        if (!daysResult.error && daysResult.data?.length) {
+          plan = daysResult.data.map((day) => [
+            day.title,
+            day.focus,
+            (day.workout_exercises || [])
+              .sort((x, y) => x.exercise_order - y.exercise_order)
+              .map((exercise) => [exercise.name, exercise.prescription]),
+          ]);
+        } else plan = [];
+        if (!profileResult.error && profileResult.data) dietProfile = profileResult.data;
+        if (!mealsResult.error && mealsResult.data?.length) {
+          mealPlan = mealsResult.data.map((meal) => [
+            meal.time_label, meal.name, meal.icon, meal.description,
+            Number(meal.calories), Number(meal.protein_g), meal.meal_key,
+          ]);
+        } else mealPlan = [];
+        weeklyVariations = weeklyResult.error ? [] : weeklyResult.data || [];
+        planOverrides = overridesResult.error ? [] : overridesResult.data || [];
+        planEditorError = overridesResult.error || null;
+        dietOverrideActive = false;
+        const todayWorkoutOverride = planOverrides.find(x => x.plan_type === "workout" && x.target_date === today());
+        const todayPlanNo = Number(todayWorkoutOverride?.plan_day || workouts[0]?.day_number || (new Date().getDay() || 7));
+        for (const row of planOverrides.filter(x => x.plan_type === "workout").sort((x, y) => Number(x.target_date != null) - Number(y.target_date != null))) {
+          const applies = row.target_date == null || (row.target_date === today() && Number(row.plan_day) === todayPlanNo);
+          if (applies && plan[row.plan_day - 1]) {
+            plan[row.plan_day - 1][2] = (row.plan_data || []).map(x => [x.name, x.prescription]);
+          }
+        }
+        const dietOverride = planOverrides.find(x => x.plan_type === "diet" && x.target_date === today())
+          || planOverrides.find(x => x.plan_type === "diet" && x.target_date == null);
+        if (dietOverride) {
+          mealPlan = (dietOverride.plan_data || []).map(x => [x.time, x.name, x.icon || "🍽️", x.description, Number(x.calories || 0), Number(x.protein || 0), x.meal_key]);
+          dietOverrideActive = true;
+        }
+        referenceDataError = daysResult.error || mealsResult.error || profileResult.error || weeklyResult.error || (!daysResult.data?.length ? { message: "Workout and diet seed data is missing" } : null);
+      }
+      function render() {
+        if (page === "home") renderHome();
+        if (page === "money") renderMoney();
+        if (page === "workout") renderWorkout();
+        if (page === "diet") renderDiet();
+        if (page === "history") renderHistory();
+        if (page === "summary") renderSummary();
+      }
+      function refreshSummaryIfReady() {
+        if ($("#page-summary")) renderSummary();
+      }
+      function renderHome() {
+        const todayWorkoutOverride = planOverrides.find(x => x.plan_type === "workout" && x.target_date === today());
+        const todayPlanNo = Number(todayWorkoutOverride?.plan_day || workouts[0]?.day_number || (new Date().getDay() || 7));
+        const calendarDayNo = new Date().getDay() || 7;
+        activeDay = todayPlanNo;
+        const todayPlan = plan[todayPlanNo - 1];
+        const todayWorkoutHtml = todayPlan
+          ? todayPlan[2].map(([name, reps]) => {
+              const done = workouts.some(x => x.exercise === name);
+              return `<div class="today-item ${done ? "checked" : ""}"><span class="mark">${done ? "✓" : "○"}</span><div><b>${esc(name)}</b><small>${esc(reps)}</small></div><small>${done ? "Done" : "Aaj"}</small></div>`;
+            }).join("")
+          : '<div class="empty">Workout plan load nahi hua. Supabase setup check karein.</div>';
+        const todayMealsHtml = mealPlan.map(([time, name, icon, description, calories]) => {
+          const done = meals.some(x => x.meal_name === name);
+          const slot = name === "Evening oats" ? "Evening meal" : name;
+          const variation = dietOverrideActive ? null : weeklyVariations.find(x => x.weekday_number === calendarDayNo && x.meal_slot === slot);
+          return `<div class="today-item ${done ? "checked" : ""}"><span class="mark">${done ? "✓" : esc(icon)}</span><div><b>${esc(name)}</b><small>${esc(variation?.description || description)} · ${calories} kcal</small></div><small class="meal-time">${esc(time)}</small></div>`;
+        }).join("");
+        const todayPlanHtml = `<div class="grid today-plan-grid"><div class="card"><div class="card-title"><div><h3>Aaj ka workout · Day ${todayPlanNo}${todayPlan ? ` · ${esc(todayPlan[0])}` : ""}</h3><small>${todayPlan ? esc(todayPlan[1]) : "Weekly plan"} · ${workouts.length}/${todayPlan?.[2]?.length || 0} complete</small></div><button class="btn subtle" onclick="window.go('workout')">Full plan →</button></div><div class="today-list">${todayWorkoutHtml}</div></div><div class="card"><div class="card-title"><div><h3>Aaj ka meal plan</h3><small>${meals.length}/${mealPlan.length} meals checked</small></div><button class="btn subtle" onclick="window.go('diet')">Diet plan →</button></div><div class="today-list">${todayMealsHtml || '<div class="empty">Diet plan load nahi hua.</div>'}</div></div></div>`;
+        let ins = transactions
+            .filter((t) => t.kind === "income")
+            .reduce((a, t) => a + +t.amount, 0),
+          outs = transactions
+            .filter((t) => t.kind === "expense")
+            .reduce((a, t) => a + +t.amount, 0),
+          lent = transactions
+            .filter((t) => t.kind === "lent" && !t.is_settled)
+            .reduce((a, t) => a + +t.amount, 0),
+          borrowed = transactions
+            .filter((t) => t.kind === "borrowed" && !t.is_settled)
+            .reduce((a, t) => a + +t.amount, 0);
+        let daySpend = transactions
+            .filter((t) => t.kind === "expense" && t.occurred_on === today())
+            .reduce((a, t) => a + +t.amount, 0),
+          last = transactions.slice(0, 5);
+        let week = Array.from({ length: 7 }, (_, i) => {
+          let d = new Date();
+          d.setDate(d.getDate() - 6 + i);
+          let key = d.toISOString().slice(0, 10),
+            income = 0,
+            expense = 0;
+          transactions
+            .filter((t) => t.occurred_on === key)
+            .forEach((t) => {
+              if (t.kind === "income" || t.kind === "repayment" || t.kind === "borrowed")
+                income += +t.amount;
+              if (t.kind === "expense" || t.kind === "lent")
+                expense += +t.amount;
+            });
+          return {
+            label: d.toLocaleDateString("en", { weekday: "short" }),
+            income,
+            expense,
+          };
+        });
+        let max = Math.max(1, ...week.flatMap((x) => [x.income, x.expense]));
+        $("#page-home").innerHTML =
+          `<div class="welcome"><div class="wtext"><div class="eyebrow" style="color:#9eaf9f">${new Date().toLocaleDateString("en", { weekday: "long", day: "numeric", month: "long" })}</div><h2>Consistency hi progress hai. <b>Chalte raho.</b></h2><p>Aaj ka workout aur paisa dono track karein.</p></div><div class="waction"><button class="btn ghost" onclick="window.go('workout')">Workout dekhein</button><button class="btn" onclick="window.openTxn()">+ Entry add</button></div></div><div class="grid stats"><div class="card"><div class="stat-head">Aaj ka kharcha <span class="stat-icon">↘</span></div><div class="stat-value">${money(daySpend)}</div><div class="stat-note">Aaj record kiya gaya</div></div><div class="card"><div class="stat-head">Total income <span class="stat-icon">↗</span></div><div class="stat-value">${money(ins)}</div><div class="stat-note pos">${transactions.filter((t) => t.kind === "income").length} income entries</div></div><div class="card"><div class="stat-head">Total kharcha <span class="stat-icon">◉</span></div><div class="stat-value">${money(outs)}</div><div class="stat-note neg">${transactions.filter((t) => t.kind === "expense").length} expense entries</div></div><div class="card"><div class="stat-head">Pending udhar · lena / dena <span class="stat-icon">⇄</span></div><div class="stat-value">${money(lent)} / ${money(borrowed)}</div><div class="stat-note">Aapse milna baaki · Aapko dena baaki</div></div></div>${todayPlanHtml}<div class="grid dashgrid"><div class="card"><div class="card-title"><h3>Money overview</h3><small>Last 7 days</small></div><div class="bars">${week.map((d) => `<div class="bar-col"><div class="bar-pair"><i class="bar in" style="height:${Math.max(3, (d.income / max) * 100)}%"></i><i class="bar out" style="height:${Math.max(3, (d.expense / max) * 100)}%"></i></div><small>${d.label}</small></div>`).join("")}</div><div class="legend"><span><i class="dot" style="background:#c5f36b"></i>Paise aaye</span><span><i class="dot" style="background:#25392c"></i>Kharcha / udhar</span></div></div><div class="card"><div class="card-title"><h3>Quick add</h3><small>Ek tap mein</small></div><div class="quick"><button onclick="window.openTxn('expense')"><span>↘</span>Kharcha</button><button onclick="window.openTxn('income')"><span>↗</span>Income</button><button onclick="window.openTxn('lent')"><span>⇄</span>Udhar diya</button><button onclick="window.openTxn('borrowed')"><span>↙</span>Udhar liya</button><button onclick="window.openTxn('repayment')"><span>✓</span>Udhar wapas</button></div></div></div><div class="card activity"><div class="card-title"><h3>Recent activity</h3><button class="btn subtle" onclick="window.go('history')">Sab dekhein →</button></div>${last.length ? last.map(txrow).join("") : '<div class="empty">Abhi koi entry nahi. Apni pehli entry add karein.</div>'}</div>`;
+      }
+      function txrow(t) {
+        let icons = { expense: "↘", income: "↗", lent: "⇄", repayment: "✓", borrowed: "↙" },
+          sign = ["income", "repayment", "borrowed"].includes(t.kind) ? "+" : "−";
+        const loanState = t.kind === "lent" || t.kind === "borrowed" ? ` · ${loanStatusText(t)}` : "";
+        return `<div class="txrow"><div class="txico">${icons[t.kind] || "₹"}</div><div><b>${esc(t.title || t.category || "Entry")}</b><small>${esc(t.category || "General")} · ${new Date(t.occurred_on + "T12:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" })}${t.person ? " · " + esc(t.person) : ""}${loanState}</small></div><div class="txamt ${sign === "+" ? "pos" : "neg"}">${sign}${money(t.amount)}</div></div>`;
+      }
+      function renderMoney() {
+        const search = document.querySelector("#search")?.value?.trim().toLowerCase() || "";
+        const people = [...new Set(transactions.map(t => t.person?.trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b));
+        const categories = [...new Set(transactions.map(t => t.category?.trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b));
+        const list = transactions.filter((t) =>
+          (!filter || t.kind === filter) &&
+          (!moneyMonthFilter || (t.occurred_on || "").startsWith(moneyMonthFilter)) &&
+          (!moneyPersonFilter || t.person === moneyPersonFilter) &&
+          (!moneyCategoryFilter || t.category === moneyCategoryFilter) &&
+          (!search || `${t.title || ""} ${t.category || ""} ${t.person || ""} ${t.note || ""}`.toLowerCase().includes(search))
+        );
+        const total = (kind) => list.filter(t => t.kind === kind).reduce((sum, t) => sum + Number(t.amount || 0), 0);
+        const personLoans = moneyPersonFilter ? transactions.filter(t => t.person?.trim() === moneyPersonFilter && ["lent", "borrowed"].includes(t.kind) && !t.is_settled) : [];
+        const personLent = personLoans.filter(t => t.kind === "lent").reduce((sum, t) => sum + Number(t.amount || 0), 0);
+        const personBorrowed = personLoans.filter(t => t.kind === "borrowed").reduce((sum, t) => sum + Number(t.amount || 0), 0);
+        const personNet = personLent - personBorrowed;
+        const personBalanceHtml = moneyPersonFilter ? `<div class="card person-balance"><div><small>${esc(moneyPersonFilter)} · pending udhar ka hisaab</small><div class="person-balance-breakdown">${money(personLent)} aapne diye · ${money(personBorrowed)} aapne liye</div></div><div class="person-balance-total ${personNet < 0 ? "neg" : "pos"}">${personNet > 0 ? `${money(personNet)} lene hain` : personNet < 0 ? `${money(Math.abs(personNet))} dene hain` : "Koi pending udhar nahi"}</div></div>` : "";
+        const errorHtml = transactionsError
+          ? `<div class="notice" style="margin-bottom:16px"><b>Money data load nahi hua.</b> ${esc(transactionsError.message || "Supabase error")}<br><small>Supabase mein transactions table, policies aur setup SQL check karein.</small><br><button class="btn subtle" id="retryMoney" style="margin-top:10px">Dobara load karein</button></div>`
+          : "";
+        const rows = list.map(t => `<div class="txrow"><div class="txico">${({expense:"↘",income:"↗",lent:"⇄",repayment:"✓",borrowed:"↙"})[t.kind] || "₹"}</div><div class="tx-main"><b>${esc(t.title || t.category || "Entry")}</b><small>${esc(t.category || "General")} · ${t.occurred_on ? new Date(t.occurred_on + "T12:00").toLocaleDateString("en-IN", {day:"numeric",month:"short",year:"numeric"}) : "Date missing"}${t.person ? " · " + esc(t.person) : ""}${t.note ? " · " + esc(t.note) : ""}</small></div><div class="txamt ${["income","repayment","borrowed"].includes(t.kind) ? "pos" : "neg"}">${["income","repayment","borrowed"].includes(t.kind) ? "+" : "−"}${money(t.amount)}</div>${["lent","borrowed"].includes(t.kind) ? `<label class="loan-check"><input type="checkbox" data-loan-status="${esc(String(t.id))}" ${t.is_settled ? "checked" : ""}><span>${t.is_settled ? (t.kind === "lent" ? "Wapas mila" : "Wapas kiya") : (t.kind === "lent" ? "Pending lena" : "Pending dena")}</span></label>` : ""}</div>`).join("");
+        $("#page-money").innerHTML = `${errorHtml}<div class="sectionhead"><div><h2>Money tracker</h2><p>Kharcha, income aur udhar ka daily hisaab.</p></div><button class="btn" id="addMoneyEntry">+ Entry add</button></div><div class="grid stats"><div class="card"><div class="stat-head">Income</div><div class="stat-value">${money(total("income") + total("repayment"))}</div><div class="stat-note">${money(total("income"))} income · ${money(total("repayment"))} udhar wapas</div></div><div class="card"><div class="stat-head">Kharcha</div><div class="stat-value">${money(total("expense"))}</div><div class="stat-note">${list.filter(t => t.kind === "expense").length} entries</div></div><div class="card"><div class="stat-head">Udhar diya · lena baaki</div><div class="stat-value">${money(list.filter(t => t.kind === "lent" && !t.is_settled).reduce((a,t)=>a+Number(t.amount||0),0))}</div><div class="stat-note">${list.filter(t => t.kind === "lent" && !t.is_settled).length} pending</div></div><div class="card"><div class="stat-head">Udhar liya · dena baaki</div><div class="stat-value">${money(list.filter(t => t.kind === "borrowed" && !t.is_settled).reduce((a,t)=>a+Number(t.amount||0),0))}</div><div class="stat-note">${list.filter(t => t.kind === "borrowed" && !t.is_settled).length} pending</div></div></div><div class="card activity"><div class="money-filters"><input class="input" id="search" type="search" placeholder="Title, category ya person search" value="${esc(search)}"><select class="input" id="kindFilter"><option value="">Sabhi types</option><option value="expense">Kharcha</option><option value="income">Income</option><option value="lent">Udhar diya</option><option value="borrowed">Udhar liya</option></select><input class="input" id="monthFilter" type="month" value="${esc(moneyMonthFilter)}"><select class="input" id="personFilter"><option value="">Sabhi log</option>${people.map(person => `<option value="${esc(person)}">${esc(person)}</option>`).join("")}</select><select class="input" id="categoryFilter"><option value="">Sabhi categories</option>${categories.map(category => `<option value="${esc(category)}">${esc(category)}</option>`).join("")}</select></div><div class="card-title"><h3>Entries</h3><small>${list.length} entries</small></div>${rows || (transactionsError ? "" : '<div class="empty">Is filter mein koi entry nahi. Nayi entry add karein.</div>')}${personBalanceHtml}</div>`;
+        $("#kindFilter").value = filter;
+        $("#personFilter").value = moneyPersonFilter;
+        $("#categoryFilter").value = moneyCategoryFilter;
+        $("#addMoneyEntry").onclick = () => openTxn();
+        $("#retryMoney")?.addEventListener("click", async () => { $("#retryMoney").disabled = true; await loadData(); renderMoney(); });
+        document.querySelectorAll("[data-loan-status]").forEach(input => {
+          input.onchange = () => toggleLoanSettlement(input.dataset.loanStatus, input.checked);
+        });
+        $("#search").oninput = () => renderMoney();
+        $("#kindFilter").onchange = () => { filter = $("#kindFilter").value; renderMoney(); };
+        $("#monthFilter").onchange = () => { moneyMonthFilter = $("#monthFilter").value; renderMoney(); };
+        $("#personFilter").onchange = () => { moneyPersonFilter = $("#personFilter").value; renderMoney(); };
+        $("#categoryFilter").onchange = () => { moneyCategoryFilter = $("#categoryFilter").value; renderMoney(); };
+      }
+      async function toggleLoanSettlement(id, isSettled) {
+        const { data, error } = await supabase
+          .from("transactions")
+          .update({ is_settled: isSettled, settled_on: isSettled ? today() : null })
+          .eq("id", id)
+          .eq("user_id", user.id)
+          .select()
+          .single();
+        if (error) {
+          toast(error.message.includes("settled") ? "Supabase mein loan-settlement-migration.sql run karein" : error.message);
+          renderMoney();
+          return;
+        }
+        transactionsError = null;
+        transactions = transactions.map(x => String(x.id) === String(id) ? data : x);
+        render();
+        refreshSummaryIfReady();
+        toast(isSettled ? (data.kind === "lent" ? "Udhar wapas milna mark ho gaya ✓" : "Udhar wapas karna mark ho gaya ✓") : "Pending mark kar diya");
+      }
+      function renderWorkout() {
+        if (!plan.length) {
+          $("#page-workout").innerHTML = '<div class="empty"><strong>Workout data Supabase mein nahi mila</strong>Dashboard ke SQL Editor mein <code>supabase-setup.sql</code> poora run karke page reload karein.</div>';
+          return;
+        }
+        let d = plan[activeDay - 1],
+          todayLog = workouts;
+        $("#page-workout").innerHTML =
+          `<div class="sectionhead"><div><h2>7-day strength plan</h2><p>Beginner to intermediate · Day 7 home dumbbell session</p></div><span class="tag">${todayLog.length} / ${d[2].length} completed today</span><button class="btn subtle" onclick="window.editWorkoutPlan()">Edit / Add plan</button></div><div class="workoutdays">${plan.map((x, i) => `<button class="daybtn ${activeDay === i + 1 ? "active" : ""}" data-day="${i + 1}"><strong>DAY ${i + 1} · ${x[0]}</strong><small>${x[1]}</small></button>`).join("")}</div><div class="sectionhead"><div><h2>Day ${activeDay}: ${d[0]}</h2><p>${d[1]} · Tap circle when complete</p></div><button class="btn" onclick="window.logWorkoutDay()">Save workout</button></div><div class="grid exercisegrid">${d[2]
+            .map(([name, reps], i) => {
+              let done = todayLog.some((x) => x.exercise === name);
+              return `<div class="card exercise ${done ? "checked" : ""}"><div class="exercise-top"><div><h4>${i + 1}. ${name}</h4><p>${reps}</p></div><button class="done" data-exercise="${esc(name)}">${done ? "✓" : "○"}</button></div></div>`;
+            })
+            .join(
+              "",
+            )}</div><div class="notice" style="margin-top:15px">Warm-up 5–10 min karein, exercise form par dhyan dein aur sets ke beech 60–90 sec rest lein. Pain ho to exercise rok dein.</div>`;
+        document.querySelectorAll("[data-day]").forEach(
+          (b) =>
+            (b.onclick = () => {
+              activeDay = +b.dataset.day;
+              renderWorkout();
+            }),
+        );
+        document.querySelectorAll("[data-exercise]").forEach(
+          (b) =>
+            (b.onclick = async () => {
+              let name = b.dataset.exercise,
+                found = workouts.find((x) => x.exercise === name);
+              if (found) {
+                let { error } = await supabase
+                  .from("workout_logs")
+                  .delete()
+                  .eq("id", found.id);
+                if (error) return toast(error.message);
+                workouts = workouts.filter((x) => x.id !== found.id);
+                workoutHistory = workoutHistory.filter((x) => x.id !== found.id);
+              } else {
+                let { data, error } = await supabase
+                  .from("workout_logs")
+                  .insert({
+                    user_id: user.id,
+                    exercise: name,
+                    day_number: activeDay,
+                    log_date: today(),
+                  })
+                  .select()
+                  .single();
+                if (error) return toast(error.message);
+                workouts.push(data);
+                workoutHistory.unshift(data);
+              }
+              renderWorkout();
+              refreshSummaryIfReady();
+            }),
+        );
+      }
+      function renderDiet() {
+        const calories = mealPlan.reduce((a, m) => a + Number(m[4] || 0), 0);
+        const protein = mealPlan.reduce((a, m) => a + Number(m[5] || 0), 0);
+        const p = dietProfile;
+        const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        const slots = [...new Map(weeklyVariations.map(x => [x.slot_order, x.meal_slot])).entries()]
+          .sort((a, b) => a[0] - b[0]);
+        const weeklyHtml = weeklyVariations.length && !dietOverrideActive
+          ? `<div class="card activity"><div class="card-title"><h3>Weekly meal variations</h3><small>Supabase se loaded</small></div><div class="table-wrap"><table class="table"><thead><tr><th>Meal</th>${weekdays.map(d => `<th>${d}</th>`).join("")}</tr></thead><tbody>${slots.map(([slotOrder, label]) => `<tr><td><b>${esc(label)}</b></td>${weekdays.map((_, i) => { const row = weeklyVariations.find(x => x.weekday_number === i + 1 && x.slot_order === slotOrder); return `<td>${esc(row?.description || "—")}</td>`; }).join("")}</tr>`).join("")}</tbody></table></div></div>`
+          : "";
+        const mealsHtml = mealPlan.length
+          ? mealPlan.map(([time, name, icon, desc, kcal, prot], i) => {
+              const done = meals.some(x => x.meal_name === name);
+              return `<div class="card meal ${done ? "checked" : ""}"><div class="meal-icon">${esc(icon)}</div><div><h4>${esc(time)} · ${esc(name)}</h4><p>${esc(desc)}</p><div class="progress"><i style="width:${done ? 100 : 0}%"></i></div><small>${kcal} kcal · ${prot} g protein</small></div><button class="done" data-meal="${esc(name)}" style="width:27px;height:27px;border-radius:9px;border:0;background:${done ? "#d5ff80" : "#f1f4ed"}">${done ? "✓" : "○"}</button></div>`;
+            }).join("")
+          : '<div class="empty"><strong>Diet data Supabase mein nahi mila</strong>Dashboard ke SQL Editor mein <code>supabase-setup.sql</code> poora run karke page reload karein.</div>';
+        $("#page-diet").innerHTML = `<div class="welcome" style="min-height:135px"><div class="wtext"><div class="eyebrow" style="color:#9eaf9f">${esc(p.goal || "Muscle gain")} · ${esc(p.diet_type || "Vegetarian")}</div><h2>Roz ka fuel, <b>planned.</b></h2><p>${esc(p.age)} years · ${esc(p.height_cm)} cm · ${esc(p.weight_kg)} kg · ${esc(p.activity)}</p></div><div class="waction"><span class="tag" style="background:#ffffff19;color:white">Target · ${p.calorie_target_min}–${p.calorie_target_max} kcal</span></div></div><div class="grid macrogrid"><div class="card macro"><span>Daily calorie target</span><b>${p.calorie_target_min}–${p.calorie_target_max} kcal</b></div><div class="card macro"><span>Protein target</span><b>${p.protein_target_min}–${p.protein_target_max} g</b></div><div class="card macro"><span>Carbs target</span><b>${p.carbs_target_min}–${p.carbs_target_max} g</b></div><div class="card macro"><span>Water · Sleep</span><b>${p.water_liters_min}–${p.water_liters_max} L · ${p.sleep_hours_min}–${p.sleep_hours_max} h</b></div></div><div class="sectionhead"><div><h2>Aaj ka meal schedule</h2><p>${meals.length} / ${mealPlan.length} meals marked complete</p></div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="tag">Meal-wise estimate: ${calories.toLocaleString()} kcal · ${protein} g protein</span><button class="btn subtle" onclick="window.editDietPlan()">Edit / Add plan</button></div></div><div class="grid mealgrid">${mealsHtml}</div>${weeklyHtml}<div class="notice" style="margin-top:16px"><b>Chart values:</b> Meal-wise numbers image ke individual meal estimates se liye gaye hain. Unka sum (${calories} kcal / ${protein} g protein) image ke separate daily summary (${p.daily_summary_calories} kcal / ${p.daily_summary_protein_g} g) se match nahi karta; dono figures database mein alag rakhe hain. Yeh sample profile hai; apne liye portions adjust karein.</div>`;
+        document.querySelectorAll("[data-meal]").forEach(b => b.onclick = async () => {
+          const name = b.dataset.meal;
+          const found = meals.find(x => x.meal_name === name);
+          if (found) {
+            const { error } = await supabase.from("meal_logs").delete().eq("id", found.id);
+            if (error) return toast(error.message);
+            meals = meals.filter(x => x.id !== found.id);
+            mealHistory = mealHistory.filter(x => x.id !== found.id);
+          } else {
+            const { data, error } = await supabase.from("meal_logs").insert({ user_id: user.id, meal_name: name, log_date: today() }).select().single();
+            if (error) return toast(error.message);
+            meals.push(data);
+            mealHistory.unshift(data);
+          }
+          renderDiet();
+          refreshSummaryIfReady();
+        });
+      }
+      function renderHistory() {
+        let dates = [...new Set(transactions.map((t) => t.occurred_on))]
+          .sort()
+          .reverse();
+        let days = new Set(workoutHistory.map((w) => w.log_date));
+        $("#page-history").innerHTML =
+          `<div class="sectionhead"><div><h2>Aapki consistency, ek jagah.</h2><p>Saved money entries aur aaj ke workout/meal check-ins.</p></div></div><div class="grid stats"><div class="card"><div class="stat-head">Money entries <span class="stat-icon">↗</span></div><div class="stat-value">${transactions.length}</div><div class="stat-note">Ab tak total</div></div><div class="card"><div class="stat-head">Workout today <span class="stat-icon">◉</span></div><div class="stat-value">${workouts.length}</div><div class="stat-note">Exercises complete</div></div><div class="card"><div class="stat-head">Meals today <span class="stat-icon">♡</span></div><div class="stat-value">${meals.length} / 7</div><div class="stat-note">Meal check-ins</div></div><div class="card"><div class="stat-head">Active workout days <span class="stat-icon">✳</span></div><div class="stat-value">${days.size}</div><div class="stat-note">Days with logged exercise</div></div></div><div class="card activity"><div class="card-title"><h3>All money activity</h3><small>${transactions.length} entries</small></div>${transactions.length ? transactions.map(txrow).join("") : '<div class="empty"><strong>History yahin build hogi</strong>Money tab se apni pehli entry add karein.</div>'}</div><div class="card activity"><div class="card-title"><h3>Aaj ke check-ins</h3><small>Workout & meals</small></div>${workouts.map((x) => `<div class="txrow"><div class="txico">◉</div><div><b>${esc(x.exercise)}</b><small>Day ${x.day_number} workout</small></div><span class="tag income">Done</span></div>`).join("")}${meals.map((x) => `<div class="txrow"><div class="txico">♡</div><div><b>${esc(x.meal_name)}</b><small>Meal check-in</small></div><span class="tag income">Done</span></div>`).join("") || (!workouts.length ? '<div class="empty">Abhi check-ins nahi hain.</div>' : "")}</div>`;
+      }
+      function renderSummary() {
+        const [year, month] = summaryMonth.split("-").map(Number);
+        const monthTransactions = transactions.filter(x => x.occurred_on?.startsWith(summaryMonth));
+        const monthWorkouts = workoutHistory.filter(x => x.log_date?.startsWith(summaryMonth));
+        const monthMeals = mealHistory.filter(x => x.log_date?.startsWith(summaryMonth));
+        const sumKind = kind => monthTransactions.filter(x => x.kind === kind).reduce((sum, x) => sum + Number(x.amount || 0), 0);
+        const expense = sumKind("expense"), income = sumKind("income"), lent = sumKind("lent"), repayment = sumKind("repayment"), borrowed = sumKind("borrowed");
+        const pendingLent = transactions.filter(x => x.kind === "lent" && !x.is_settled).reduce((a, x) => a + Number(x.amount), 0);
+        const pendingBorrowed = transactions.filter(x => x.kind === "borrowed" && !x.is_settled).reduce((a, x) => a + Number(x.amount), 0);
+        const lentReturnedInMonth = transactions.filter(x => x.kind === "lent" && x.is_settled && x.settled_on?.startsWith(summaryMonth)).reduce((a, x) => a + Number(x.amount), 0);
+        const borrowedRepaidInMonth = transactions.filter(x => x.kind === "borrowed" && x.is_settled && x.settled_on?.startsWith(summaryMonth)).reduce((a, x) => a + Number(x.amount), 0);
+        const daysCount = new Date(year, month, 0).getDate();
+        const workoutDates = new Set(monthWorkouts.map(x => x.log_date));
+        const mealDates = new Set(monthMeals.map(x => x.log_date));
+        const weeks = Array.from({ length: Math.ceil(daysCount / 7) }, (_, i) => {
+          const first = i * 7 + 1, last = Math.min((i + 1) * 7, daysCount);
+          const from = `${summaryMonth}-${String(first).padStart(2, "0")}`;
+          const to = `${summaryMonth}-${String(last).padStart(2, "0")}`;
+          const rows = monthTransactions.filter(x => x.occurred_on >= from && x.occurred_on <= to);
+          return {
+            label: `Week ${i + 1}`,
+            got: rows.filter(x => x.kind === "income" || x.kind === "repayment" || x.kind === "borrowed").reduce((a, x) => a + Number(x.amount), 0),
+            out: rows.filter(x => x.kind === "expense" || x.kind === "lent").reduce((a, x) => a + Number(x.amount), 0),
+          };
+        });
+        const maxWeek = Math.max(1, ...weeks.flatMap(x => [x.got, x.out]));
+        const workoutDailyRows = Array.from({ length: daysCount }, (_, i) => {
+          const date = `${summaryMonth}-${String(i + 1).padStart(2, "0")}`;
+          const records = monthWorkouts.filter(x => x.log_date === date);
+          const plans = [...new Set(records.map(x => x.day_number))].map(n => `Day ${n} ${plan[n - 1]?.[0] || "Workout"}`).join(", ");
+          const names = records.map(x => esc(x.exercise)).join(", ");
+          const mealCount = monthMeals.filter(x => x.log_date === date).length;
+          return `<tr><td>${new Date(`${date}T12:00:00`).toLocaleDateString("en-IN", { day: "2-digit", month: "short", weekday: "short" })}</td><td>${records.length ? esc(plans) : "Rest / no log"}</td><td>${records.length ? `${records.length} · ${names}` : "—"}</td><td>${mealCount} / ${mealPlan.length}</td></tr>`;
+        }).join("");
+        const financeRows = monthTransactions.length
+          ? monthTransactions.map(x => `<tr><td>${new Date(`${x.occurred_on}T12:00:00`).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</td><td>${esc(x.title || "Entry")}</td><td>${esc({ expense: "Kharcha", income: "Income", lent: "Udhar diya", repayment: "Udhar wapas", borrowed: "Udhar liya" }[x.kind] || x.kind)}</td><td>${esc(x.category || "—")}</td><td>${esc(x.person || "—")}</td><td>${money(x.amount)}</td><td>${loanStatusText(x)}</td></tr>`).join("")
+          : '<tr><td colspan="7" class="empty">Is month mein koi money entry nahi hai.</td></tr>';
+        const monthLabel = new Date(year, month - 1, 1).toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+        const netMovement = income + repayment + borrowed + lentReturnedInMonth - expense - lent - borrowedRepaidInMonth;
+        const expenseByCategory = Object.entries(monthTransactions.filter(x => x.kind === "expense").reduce((acc, x) => {
+          const key = (x.category || "Other").trim() || "Other";
+          acc[key] = (acc[key] || 0) + Number(x.amount || 0);
+          return acc;
+        }, {})).sort((a,b) => b[1] - a[1]);
+        const pieColors = ["#eaa47d", "#718fce", "#9e69b4", "#4b9d86", "#d1aa48", "#db6c70", "#71808d"];
+        let pieCursor = 0;
+        const pieStops = expenseByCategory.length ? expenseByCategory.map(([_, amount], i) => {
+          const start = pieCursor;
+          pieCursor += expense ? amount / expense * 100 : 0;
+          return `${pieColors[i % pieColors.length]} ${start}% ${pieCursor}%`;
+        }).join(", ") : "#e9ece6 0% 100%";
+        const expensePie = `conic-gradient(${pieStops})`;
+        const categoryLegend = expenseByCategory.length ? expenseByCategory.map(([category, amount], i) => `<div class="report-legend-item"><i class="report-swatch" style="background:${pieColors[i % pieColors.length]}"></i>${esc(category)} · ${money(amount)}</div>`).join("") : '<div class="report-legend-item">Is month mein expense data nahi.</div>';
+        const maxConsistency = Math.max(1, workoutDates.size, mealDates.size);
+        const maxCash = Math.max(1, income + repayment + borrowed + lentReturnedInMonth, expense + lent + borrowedRepaidInMonth);
+        const conclusionHtml = `<section class="card report-conclusion"><div class="card-title"><h3>Monthly conclusion & charts</h3><small>${esc(monthLabel)}</small></div><p>Is mahine <b>${workoutDates.size}</b> din workout log hua, <b>${mealDates.size}</b> din meals log hue, aur <b>${monthTransactions.length}</b> money entries record hui. Kharchon mein sabse badi category <b>${expenseByCategory.length ? esc(expenseByCategory[0][0]) + ` (${money(expenseByCategory[0][1])})` : "—"}</b> rahi. Net money movement: <b>${money(netMovement)}</b>.</p><div class="report-chart-grid"><div><h4>Workout & meal logging · days</h4><div class="report-bar-row"><span>Workout days</span><div class="report-bar-track"><div class="report-bar-fill" style="width:${Math.min(100, workoutDates.size / daysCount * 100)}%"></div></div><b>${workoutDates.size}/${daysCount}</b></div><div class="report-bar-row"><span>Meal log days</span><div class="report-bar-track"><div class="report-bar-fill" style="width:${Math.min(100, mealDates.size / daysCount * 100)}%"></div></div><b>${mealDates.size}/${daysCount}</b></div><h4>Money movement · rupees</h4><div class="report-bar-row"><span>Money in*</span><div class="report-bar-track"><div class="report-bar-fill" style="width:${Math.min(100, (income + repayment + borrowed + lentReturnedInMonth) / maxCash * 100)}%"></div></div><b>${money(income + repayment + borrowed + lentReturnedInMonth)}</b></div><div class="report-bar-row"><span>Money out*</span><div class="report-bar-track"><div class="report-bar-fill out" style="width:${Math.min(100, (expense + lent + borrowedRepaidInMonth) / maxCash * 100)}%"></div></div><b>${money(expense + lent + borrowedRepaidInMonth)}</b></div><small>*Income, udhar liya/wapas mila vs kharcha, udhar diya/chukaya.</small></div><div><h4>Expense category split</h4><div class="report-pie-wrap"><div class="report-pie" style="background:${expensePie}"></div><div class="report-legend">${categoryLegend}</div></div></div></div></section>`;
+        const currentWorkoutOverride = planOverrides.find(x => x.plan_type === "workout" && x.target_date === today());
+        const currentWorkoutDay = Number(currentWorkoutOverride?.plan_day || workouts[0]?.day_number || (new Date().getDay() || 7));
+        const currentWorkout = plan[currentWorkoutDay - 1];
+        const currentMealsSnapshot = mealPlan.map(([time, name, icon, description]) => {
+          const slot = name === "Evening oats" ? "Evening meal" : name;
+          const variation = dietOverrideActive ? null : weeklyVariations.find(x => x.weekday_number === (new Date().getDay() || 7) && x.meal_slot === slot);
+          return `<div class="txrow"><div class="txico">${esc(icon)}</div><div><b>${esc(time)} · ${esc(name)}</b><small>${esc(variation?.description || description)}</small></div></div>`;
+        }).join("");
+        const planSnapshotHtml = `<div class="grid dashgrid"><div class="card"><div class="card-title"><h3>Aaj ka workout plan · Day ${currentWorkoutDay}${currentWorkout ? ` · ${esc(currentWorkout[0])}` : ""}</h3><small>Latest saved plan</small></div>${currentWorkout ? currentWorkout[2].map(([name, reps]) => `<div class="txrow"><div class="txico">◉</div><div><b>${esc(name)}</b><small>${esc(reps)}</small></div></div>`).join("") : '<div class="empty">Workout plan load nahi hua.</div>'}</div><div class="card"><div class="card-title"><h3>Aaj ka diet plan</h3><small>Latest saved plan</small></div>${currentMealsSnapshot || '<div class="empty">Diet plan load nahi hua.</div>'}</div></div>`;
+        $("#page-summary").innerHTML = `<div class="sectionhead no-print"><div><h2>Monthly progress report</h2><p>Supabase se aayi money, workout aur meal history.</p></div><div style="display:flex;gap:8px;align-items:center"><input class="input" id="summaryMonth" type="month" value="${esc(summaryMonth)}"><button class="btn" id="downloadSummary">↓ Download PDF</button></div></div><div class="notice no-print">PDF ke liye button dabayein, phir browser print window mein <b>Save as PDF</b> chunein.</div><div class="welcome summary-cover"><div class="wtext"><div class="eyebrow" style="color:#9eaf9f">FITLEDGER · MONTHLY REPORT</div><h2>${esc(monthLabel)}</h2><p>Money habits · Workout consistency · Meal tracking</p></div><div class="waction"><span class="tag" style="background:#ffffff19;color:white">${workoutDates.size} workout days</span></div></div>${planSnapshotHtml}<div class="grid stats"><div class="card"><div class="stat-head">Total kharcha <span class="stat-icon">↘</span></div><div class="stat-value">${money(expense)}</div><div class="stat-note">${monthTransactions.filter(x => x.kind === "expense").length} entries</div></div><div class="card"><div class="stat-head">Income <span class="stat-icon">↗</span></div><div class="stat-value">${money(income)}</div><div class="stat-note">${monthTransactions.filter(x => x.kind === "income").length} entries</div></div><div class="card"><div class="stat-head">Udhar diya / liya <span class="stat-icon">⇄</span></div><div class="stat-value">${money(lent)} / ${money(borrowed)}</div><div class="stat-note">${money(lentReturnedInMonth)} wapas mile · ${money(borrowedRepaidInMonth)} chukaye · Pending lena ${money(pendingLent)} / dena ${money(pendingBorrowed)} · Net ${money(netMovement)}</div></div><div class="card"><div class="stat-head">Training & diet <span class="stat-icon">◉</span></div><div class="stat-value">${monthWorkouts.length} / ${monthMeals.length}</div><div class="stat-note">Exercise / meal check-ins · ${mealDates.size} meal-log days</div></div></div><div class="grid dashgrid"><div class="card"><div class="card-title"><h3>Weekly money movement</h3><small>Income + udhar liya vs kharcha + diya</small></div><div class="bars">${weeks.map(w => `<div class="bar-col"><div class="bar-pair"><i class="bar in" title="${money(w.got)}" style="height:${Math.max(3, w.got / maxWeek * 100)}%"></i><i class="bar out" title="${money(w.out)}" style="height:${Math.max(3, w.out / maxWeek * 100)}%"></i></div><small>${w.label}</small></div>`).join("")}</div><div class="legend"><span><i class="dot" style="background:#c5f36b"></i>Aaye</span><span><i class="dot" style="background:#25392c"></i>Gaye / udhar</span></div></div><div class="card"><div class="card-title"><h3>Monthly consistency</h3><small>${daysCount} calendar days</small></div><div class="quick"><div><span>◉</span><b>${workoutDates.size}</b><small> workout days</small></div><div><span>♡</span><b>${mealDates.size}</b><small> meal-log days</small></div><div><span>✓</span><b>${monthWorkouts.length}</b><small> exercises done</small></div><div><span>₹</span><b>${monthTransactions.length}</b><small> money entries</small></div></div></div></div><div class="card activity"><div class="card-title"><h3>Daily workout & meal progress</h3><small>${esc(monthLabel)}</small></div><div class="table-wrap"><table class="table summary-daily-table"><thead><tr><th>Date</th><th>Workout plan</th><th>Exercises checked</th><th>Meals</th></tr></thead><tbody>${workoutDailyRows}</tbody></table></div></div><div class="card activity"><div class="card-title"><h3>Daily money entries</h3><small>${monthTransactions.length} entries</small></div><div class="table-wrap"><table class="table summary-daily-table"><thead><tr><th>Date</th><th>Details</th><th>Type</th><th>Category</th><th>Person</th><th>Amount</th><th>Status</th></tr></thead><tbody>${financeRows}</tbody></table></div></div>${conclusionHtml}`;
+        $("#summaryMonth").onchange = () => { summaryMonth = $("#summaryMonth").value || today().slice(0, 7); renderSummary(); };
+        $("#downloadSummary").onclick = () => window.print();
+      }
+      function editorScopeMarkup() {
+        return `<div class="editor-scope"><label for="planScope">Save changes:</label><select class="input" id="planScope"><option value="permanent">Permanently</option><option value="date">Only on selected date</option></select><input class="input" id="planOverrideDate" type="date" value="${today()}" style="display:none"><small>Permanent changes update your saved plan. A date-only edit applies to that date only.</small></div>`;
+      }
+      function bindEditorScope() {
+        const scope = $("#planScope"), date = $("#planOverrideDate");
+        scope.onchange = () => { date.style.display = scope.value === "date" ? "block" : "none"; date.required = scope.value === "date"; };
+      }
+      function addWorkoutEditorRow(name = "", prescription = "") {
+        $("#planEditorList").insertAdjacentHTML("beforeend", `<div class="plan-editor-row workout-edit-row"><div class="field"><label>Exercise</label><input class="input ex-name" required value="${esc(name)}" placeholder="Exercise name"></div><div class="field"><label>Sets / reps</label><input class="input ex-reps" required value="${esc(prescription)}" placeholder="3 × 8–12"></div><button type="button" class="btn subtle remove-row" aria-label="Remove exercise">Remove</button></div>`);
+        $("#planEditorList .remove-row:last-child").onclick = e => e.currentTarget.closest(".workout-edit-row").remove();
+      }
+      function openWorkoutEditor() {
+        if (!plan[activeDay - 1]) return toast("Workout plan Supabase se load nahi hua");
+        const day = plan[activeDay - 1];
+        $("#modal").innerHTML = `<h2>Edit Day ${activeDay} · ${esc(day[0])}</h2><p>Exercise add, edit ya remove karein; phir permanent ya ek date ke liye save karein.</p><form id="planEditorForm"><div class="plan-editor-list" id="planEditorList"></div><button type="button" class="btn subtle" id="addPlanRow">＋ Exercise add karein</button>${editorScopeMarkup()}<div class="modal-actions"><button type="button" class="btn subtle" id="cancelModal">Cancel</button><button class="btn" id="savePlan">Save workout plan</button></div></form>`;
+        $("#modalBack").classList.add("open");
+        day[2].forEach(x => addWorkoutEditorRow(x[0], x[1]));
+        $("#addPlanRow").onclick = () => addWorkoutEditorRow();
+        bindEditorScope();
+        $("#cancelModal").onclick = closeModal;
+        $("#planEditorForm").onsubmit = async e => {
+          e.preventDefault();
+          const data = [...document.querySelectorAll(".workout-edit-row")].map(row => ({ name: row.querySelector(".ex-name").value.trim(), prescription: row.querySelector(".ex-reps").value.trim() })).filter(x => x.name);
+          if (!data.length) return toast("Kam se kam ek exercise rakhein");
+          await savePlanOverride("workout", activeDay, data);
+        };
+      }
+      function addDietEditorRow(meal = {}) {
+        const key = meal.key || `custom-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
+        $("#planEditorList").insertAdjacentHTML("beforeend", `<div class="plan-editor-row diet-edit-row" data-key="${esc(key)}"><div class="field"><label>Time</label><input class="input meal-time-input" required value="${esc(meal.time || "")}" placeholder="8:00 AM"></div><div class="field"><label>Meal name</label><input class="input meal-name-input" required value="${esc(meal.name || "")}" placeholder="Breakfast"></div><div class="field"><label>Icon</label><input class="input meal-icon-input" value="${esc(meal.icon || "🍽️")}" maxlength="8"></div><div class="field"><label>Calories</label><input class="input meal-cal-input" type="number" min="0" value="${Number(meal.calories || 0)}"></div><div class="field"><label>Protein (g)</label><input class="input meal-protein-input" type="number" min="0" step="0.1" value="${Number(meal.protein || 0)}"></div><div class="field wide"><label>Meal details</label><textarea class="input meal-desc-input" required placeholder="Ingredients and portion">${esc(meal.description || "")}</textarea></div><button type="button" class="btn subtle remove-row" aria-label="Remove meal">Remove</button></div>`);
+        $("#planEditorList .remove-row:last-child").onclick = e => e.currentTarget.closest(".diet-edit-row").remove();
+      }
+      function openDietEditor() {
+        $("#modal").innerHTML = `<h2>Edit / Add daily diet plan</h2><p>Meal time, food, calories aur protein update karein. Changes permanent ya ek selected date ke liye save ho sakte hain.</p><form id="planEditorForm"><div class="plan-editor-list" id="planEditorList"></div><button type="button" class="btn subtle" id="addPlanRow">＋ Meal add karein</button>${editorScopeMarkup()}<div class="modal-actions"><button type="button" class="btn subtle" id="cancelModal">Cancel</button><button class="btn" id="savePlan">Save diet plan</button></div></form>`;
+        $("#modalBack").classList.add("open");
+        mealPlan.forEach(([time, name, icon, description, calories, protein, key]) => addDietEditorRow({ time, name, icon, description, calories, protein, key }));
+        $("#addPlanRow").onclick = () => addDietEditorRow();
+        bindEditorScope();
+        $("#cancelModal").onclick = closeModal;
+        $("#planEditorForm").onsubmit = async e => {
+          e.preventDefault();
+          const data = [...document.querySelectorAll(".diet-edit-row")].map(row => ({ key: row.dataset.key, time: row.querySelector(".meal-time-input").value.trim(), name: row.querySelector(".meal-name-input").value.trim(), icon: row.querySelector(".meal-icon-input").value.trim() || "🍽️", description: row.querySelector(".meal-desc-input").value.trim(), calories: Number(row.querySelector(".meal-cal-input").value || 0), protein: Number(row.querySelector(".meal-protein-input").value || 0) })).filter(x => x.name);
+          if (!data.length) return toast("Kam se kam ek meal rakhein");
+          await savePlanOverride("diet", null, data);
+        };
+      }
+      async function savePlanOverride(type, dayNumber, planData) {
+        const scope = $("#planScope").value;
+        const targetDate = scope === "date" ? $("#planOverrideDate").value : null;
+        if (scope === "date" && !targetDate) return toast("Date select karein");
+        const existing = planOverrides.find(x => x.plan_type === type && (type !== "workout" || Number(x.plan_day) === Number(dayNumber)) && x.target_date === targetDate);
+        const values = { plan_type: type, plan_day: type === "workout" ? dayNumber : null, target_date: targetDate, plan_data: planData, updated_at: new Date().toISOString() };
+        const result = existing
+          ? await supabase.from("user_plan_overrides").update(values).eq("id", existing.id).select().single()
+          : await supabase.from("user_plan_overrides").insert({ ...values, user_id: user.id }).select().single();
+        if (result.error) {
+          toast(result.error.message.includes("user_plan_overrides") ? "Supabase mein plan-editor-migration.sql run karein" : result.error.message);
+          return;
+        }
+        closeModal();
+        await loadData();
+        render();
+        refreshSummaryIfReady();
+        toast(scope === "date" ? "Is date ka plan save ho gaya ✓" : "Permanent plan save ho gaya ✓");
+      }
+      function openTxn(kind = "expense") {
+        let names = {
+          expense: "Kharcha",
+          income: "Income",
+          lent: "Udhar diya",
+          repayment: "Udhar wapas mila",
+          borrowed: "Udhar liya",
+        };
+        $("#modal").innerHTML =
+          `<h2>Nayi money entry</h2><p>Apna daily hisaab yahan record karein.</p><form id="txnForm"><div class="formgrid"><div class="field full"><label>Entry type</label><select class="input" id="txKind">${Object.entries(
+            names,
+          )
+            .map(
+              ([k, n]) =>
+                `<option value="${k}" ${kind === k ? "selected" : ""}>${n}</option>`,
+            )
+            .join(
+              "",
+            )}</select></div><div class="field"><label>Amount (₹)</label><input class="input" id="txAmount" type="number" min="1" step="0.01" required placeholder="500"></div><div class="field"><label>Date</label><input class="input" id="txDate" type="date" value="${today()}" required></div><div class="field"><label>Title</label><input class="input" id="txTitle" required placeholder="Lunch, salary..."></div><div class="field"><label>Category</label><select class="input" id="txCategory"><option>Food</option><option>Travel</option><option>Gym</option><option>Shopping</option><option>Salary</option><option>Personal</option><option>Other</option></select></div><div class="field full"><label>Person (udhar ke liye)</label><input class="input" id="txPerson" placeholder="Naam (optional)"></div><div class="field full"><label>Note (optional)</label><input class="input" id="txNote" placeholder="Extra detail"></div></div><div class="modal-actions"><button type="button" class="btn subtle" id="cancelModal">Cancel</button><button class="btn" id="saveTxn">Save entry</button></div></form>`;
+        $("#modalBack").classList.add("open");
+        const syncPersonField = () => {
+          const borrowed = $("#txKind").value === "borrowed";
+          $("#txPerson").required = borrowed;
+          if (borrowed && !$("#txTitle").value) {
+            $("#txTitle").value = "Udhar liya";
+            $("#txCategory").value = "Personal";
+          }
+          $("#txPerson").previousElementSibling.textContent = borrowed
+            ? "Kis person se udhar liya? *"
+            : "Person (udhar ke liye)";
+          $("#txPerson").placeholder = borrowed
+            ? "Naam likhein"
+            : "Naam (optional)";
+        };
+        $("#txKind").onchange = syncPersonField;
+        syncPersonField();
+        $("#cancelModal").onclick = closeModal;
+        $("#txnForm").onsubmit = async (e) => {
+          e.preventDefault();
+          let payload = {
+            user_id: user.id,
+            kind: $("#txKind").value,
+            amount: +$("#txAmount").value,
+            occurred_on: $("#txDate").value,
+            title: $("#txTitle").value.trim(),
+            category: $("#txCategory").value,
+            person: $("#txPerson").value.trim() || null,
+            note: $("#txNote").value.trim() || null,
+          };
+          $("#saveTxn").disabled = true;
+          let { data, error } = await supabase
+            .from("transactions")
+            .insert(payload)
+            .select()
+            .single();
+          if (error) {
+            $("#saveTxn").disabled = false;
+            toast(error.message);
+            return;
+          }
+          transactionsError = null;
+          transactions.unshift(data);
+          closeModal();
+          render();
+          refreshSummaryIfReady();
+          toast("Entry save ho gayi ✓");
+        };
+      }
+      function closeModal() {
+        $("#modalBack").classList.remove("open");
+      }
+      async function logWorkoutDay() {
+        if (!workouts.length)
+          return toast("Pehle exercises complete mark karein");
+        toast("Workout progress save hai ✓");
+      }
+      window.openTxn = openTxn;
+      window.go = showPage;
+      window.logWorkoutDay = logWorkoutDay;
+      window.editWorkoutPlan = openWorkoutEditor;
+      window.editDietPlan = openDietEditor;
+      $("#modalBack")?.addEventListener("click", (e) => {
+        if (e.target.id === "modalBack") closeModal();
+      });
+      async function boot() {
+        shell();
+        await loadData();
+        render();
+        if (referenceDataError) {
+          toast("Supabase plan tables/data missing. supabase-setup.sql run karke reload karein.");
+        }
+        if (planEditorError) {
+          toast("Plan edit save karne ke liye plan-editor-migration.sql run karein.");
+        }
+        let err = [...document.querySelectorAll(".page")]
+          .map((x) => x.textContent)
+          .join("");
+        if (!transactions.length && !workouts.length && !meals.length) {
+          let check = await supabase.from("transactions").select("id").limit(1);
+          if (
+            check.error &&
+            /does not exist|schema cache|permission denied/i.test(
+              check.error.message,
+            )
+          )
+            toast("Database setup chahiye — README/SQL setup dekhein");
+        }
+      }
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session) {
+        user = session.user;
+        await boot();
+      } else authScreen();
+      supabase.auth.onAuthStateChange(async (_event, session) => {
+        if (session && (!user || user.id !== session.user.id)) {
+          user = session.user;
+          await boot();
+        } else if (!session && user) {
+          user = null;
+          authScreen();
+        }
+      });
+    </script>
+  </body>
+</html>
