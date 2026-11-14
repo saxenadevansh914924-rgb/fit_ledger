@@ -267,6 +267,15 @@
         grid-template-columns: repeat(4, minmax(0, 1fr));
         margin-bottom: 20px;
       }
+      .weight-grid { display:grid; grid-template-columns:minmax(0, 1.1fr) minmax(0, .9fr); gap:15px; }
+      .weight-form { display:grid; grid-template-columns:1fr 1fr; gap:10px; align-items:end; }
+      .weight-form .field:last-of-type { grid-column:1 / -1; }
+      .weight-chart { width:100%; height:auto; min-height:190px; overflow:visible; }
+      .weight-history-row { display:grid; grid-template-columns:1fr auto auto; gap:12px; align-items:center; padding:12px 0; border-bottom:1px solid #eef0ec; font-size:12px; }
+      .weight-change { font-weight:800; }
+      .weight-change.gain { color:#43815b; }
+      .weight-change.loss { color:#bd634f; }
+      @media (max-width:760px) { .weight-grid { grid-template-columns:1fr; } }
       .card {
         background: var(--paper);
         border: 1px solid var(--line);
@@ -600,6 +609,15 @@
       .daybtn.active small {
         color: #bfccbf;
       }
+      .rest-timer { margin:15px 0; display:flex; align-items:center; justify-content:space-between; gap:16px; background:#f6f8f2; border-color:#e2e9d8; }
+      .rest-timer-copy h3 { margin:0 0 4px; font:800 14px Manrope; }
+      .rest-timer-copy p { margin:0; color:var(--muted); font-size:10px; }
+      .rest-timer-controls { display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+      .rest-clock { min-width:76px; font:800 25px Manrope; color:var(--deep); text-align:center; font-variant-numeric:tabular-nums; }
+      .rest-presets { display:flex; gap:4px; }
+      .rest-presets button { background:#fff; border:1px solid var(--line); color:var(--ink); border-radius:8px; padding:7px 9px; font-size:10px; }
+      .rest-presets button.active { background:var(--deep); border-color:var(--deep); color:#fff; }
+      @media(max-width:600px) { .rest-timer { align-items:flex-start; flex-direction:column; } .rest-timer-controls { justify-content:flex-start; } }
       .exercisegrid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
       }
@@ -945,10 +963,13 @@
           display: none;
         }
         .nav {
-          grid-template-columns: repeat(6, 1fr);
+          display:flex;
+          overflow-x:auto;
           gap: 2px;
+          scrollbar-width:none;
         }
         .nav button {
+          flex:0 0 58px;
           padding: 7px 3px;
           justify-content: center;
           flex-direction: column;
@@ -1092,6 +1113,8 @@
         transactionsError = null,
         workouts = [],
         workoutHistory = [],
+        weightLogs = [],
+        weightLogError = null,
         meals = [],
         mealHistory = [],
         weeklyVariations = [],
@@ -1106,6 +1129,11 @@
         moneyPersonFilter = "",
         moneyCategoryFilter = "",
         summaryMonth = today().slice(0, 7);
+      let restTimerDuration = 180,
+        restTimerRemaining = 180,
+        restTimerEndAt = null,
+        restTimerInterval = null,
+        restTimerRunning = false;
       let plan = [
         [
           "Push A",
@@ -1360,7 +1388,7 @@
       }
       function shell() {
         const username = user.user_metadata?.username || (user.email || "user").split("@")[0];
-        document.body.innerHTML = `<div class="app"><aside class="side"><div class="brand"><div class="brand-mark">✳</div><div>fitledger<small>TRAIN WELL. SPEND WISE.</small></div></div><div><div class="nav-label">WORKSPACE</div><nav class="nav"><button data-page="home" class="active"><span>⌂</span>Overview</button><button data-page="money"><span>↗</span>Money</button><button data-page="workout"><span>◉</span>Workout</button><button data-page="diet"><span>♡</span>Diet plan</button><button data-page="history"><span>▤</span>History</button><button data-page="summary"><span>▥</span>Summary</button></nav></div><div class="side-bottom"><div class="userbox"><div class="avatar">${esc(username[0].toUpperCase())}</div><div><b>${esc(username)}</b><small>Personal account</small></div><button class="logout" id="logout" title="Logout">↪</button></div></div></aside><main class="main"><div class="topline"><div><div class="eyebrow">YOUR PERSONAL DASHBOARD</div><h1 id="pageTitle">Overview</h1></div><div class="date-chip">◷ &nbsp;${new Date().toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}</div></div><section class="page active" id="page-home"></section><section class="page" id="page-money"></section><section class="page" id="page-workout"></section><section class="page" id="page-diet"></section><section class="page" id="page-history"></section><section class="page" id="page-summary"></section></main></div><div class="toast" id="toast"></div><div class="modal-back" id="modalBack"><div class="modal" id="modal"></div></div>`;
+        document.body.innerHTML = `<div class="app"><aside class="side"><div class="brand"><div class="brand-mark">✳</div><div>fitledger<small>TRAIN WELL. SPEND WISE.</small></div></div><div><div class="nav-label">WORKSPACE</div><nav class="nav"><button data-page="home" class="active"><span>⌂</span>Overview</button><button data-page="money"><span>↗</span>Money</button><button data-page="workout"><span>◉</span>Workout</button><button data-page="diet"><span>♡</span>Diet plan</button><button data-page="history"><span>▤</span>History</button><button data-page="summary"><span>▥</span>Summary</button><button data-page="weight"><span>⚖</span>Weight</button></nav></div><div class="side-bottom"><div class="userbox"><div class="avatar">${esc(username[0].toUpperCase())}</div><div><b>${esc(username)}</b><small>Personal account</small></div><button class="logout" id="logout" title="Logout">↪</button></div></div></aside><main class="main"><div class="topline"><div><div class="eyebrow">YOUR PERSONAL DASHBOARD</div><h1 id="pageTitle">Overview</h1></div><div class="date-chip">◷ &nbsp;${new Date().toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}</div></div><section class="page active" id="page-home"></section><section class="page" id="page-money"></section><section class="page" id="page-workout"></section><section class="page" id="page-diet"></section><section class="page" id="page-history"></section><section class="page" id="page-summary"></section><section class="page" id="page-weight"></section></main></div><div class="toast" id="toast"></div><div class="modal-back" id="modalBack"><div class="modal" id="modal"></div></div>`;
         document
           .querySelectorAll(".nav button")
           .forEach((b) => (b.onclick = () => showPage(b.dataset.page)));
@@ -1385,11 +1413,12 @@
           diet: "Diet & nutrition",
           history: "Your history",
           summary: "Monthly summary",
+          weight: "Weight gain progress",
         }[p];
         render();
       }
       async function loadData() {
-        const [a, b, c, daysResult, profileResult, mealsResult, weeklyResult, overridesResult] = await Promise.all([
+        const [a, b, c, daysResult, profileResult, mealsResult, weeklyResult, overridesResult, weightResult] = await Promise.all([
           supabase.from("transactions").select("*").order("occurred_on", { ascending: false }),
           supabase.from("workout_logs").select("*").order("log_date", { ascending: false }),
           supabase.from("meal_logs").select("*").order("log_date", { ascending: false }),
@@ -1398,9 +1427,12 @@
           supabase.from("diet_meals").select("*").order("sort_order"),
           supabase.from("diet_weekly_variations").select("*").order("weekday_number").order("slot_order"),
           supabase.from("user_plan_overrides").select("*").eq("user_id", user.id),
+          supabase.from("weight_logs").select("*").eq("user_id", user.id).order("measured_on", { ascending: false }),
         ]);
         transactionsError = a.error || null;
         transactions = a.error ? [] : a.data || [];
+        weightLogError = weightResult.error || null;
+        weightLogs = weightResult.error ? [] : weightResult.data || [];
         workoutHistory = b.error ? [] : b.data || [];
         workouts = workoutHistory.filter((x) => x.log_date === today());
         mealHistory = c.error ? [] : c.data || [];
@@ -1448,6 +1480,7 @@
         if (page === "diet") renderDiet();
         if (page === "history") renderHistory();
         if (page === "summary") renderSummary();
+        if (page === "weight") renderWeight();
       }
       function refreshSummaryIfReady() {
         if ($("#page-summary")) renderSummary();
@@ -1572,6 +1605,61 @@
         refreshSummaryIfReady();
         toast(isSettled ? (data.kind === "lent" ? "Udhar wapas milna mark ho gaya ✓" : "Udhar wapas karna mark ho gaya ✓") : "Pending mark kar diya");
       }
+      function updateRestTimerDisplay() {
+        if (restTimerRunning && restTimerEndAt) {
+          restTimerRemaining = Math.max(0, Math.ceil((restTimerEndAt - Date.now()) / 1000));
+          if (restTimerRemaining === 0) {
+            restTimerRunning = false;
+            restTimerEndAt = null;
+            clearInterval(restTimerInterval);
+            restTimerInterval = null;
+            toast("Rest complete · agla set shuru karein ✓");
+          }
+        }
+        const clock = $("#restClock");
+        if (clock) clock.textContent = `${String(Math.floor(restTimerRemaining / 60)).padStart(2, "0")}:${String(restTimerRemaining % 60).padStart(2, "0")}`;
+        const start = $("#restStart"), pause = $("#restPause");
+        if (start) { start.disabled = restTimerRunning; start.textContent = restTimerRunning ? "Running…" : "Start"; }
+        if (pause) pause.disabled = !restTimerRunning;
+        document.querySelectorAll("[data-rest-seconds]").forEach(button => {
+          button.classList.toggle("active", Number(button.dataset.restSeconds) === restTimerDuration);
+        });
+      }
+      function setRestTimerDuration(seconds) {
+        restTimerDuration = Math.min(180, Math.max(60, seconds));
+        restTimerRunning = false;
+        restTimerEndAt = null;
+        clearInterval(restTimerInterval);
+        restTimerInterval = null;
+        restTimerRemaining = restTimerDuration;
+        updateRestTimerDisplay();
+      }
+      function startRestTimer() {
+        if (restTimerRunning) return;
+        if (restTimerRemaining <= 0) restTimerRemaining = restTimerDuration;
+        restTimerRunning = true;
+        restTimerEndAt = Date.now() + restTimerRemaining * 1000;
+        clearInterval(restTimerInterval);
+        restTimerInterval = setInterval(updateRestTimerDisplay, 250);
+        updateRestTimerDisplay();
+      }
+      function pauseRestTimer() {
+        if (!restTimerRunning) return;
+        updateRestTimerDisplay();
+        restTimerRunning = false;
+        restTimerEndAt = null;
+        clearInterval(restTimerInterval);
+        restTimerInterval = null;
+        updateRestTimerDisplay();
+      }
+      function resetRestTimer() {
+        restTimerRunning = false;
+        restTimerEndAt = null;
+        clearInterval(restTimerInterval);
+        restTimerInterval = null;
+        restTimerRemaining = restTimerDuration;
+        updateRestTimerDisplay();
+      }
       function renderWorkout() {
         if (!plan.length) {
           $("#page-workout").innerHTML = '<div class="empty"><strong>Workout data Supabase mein nahi mila</strong>Dashboard ke SQL Editor mein <code>supabase-setup.sql</code> poora run karke page reload karein.</div>';
@@ -1580,7 +1668,7 @@
         let d = plan[activeDay - 1],
           todayLog = workouts;
         $("#page-workout").innerHTML =
-          `<div class="sectionhead"><div><h2>7-day strength plan</h2><p>Beginner to intermediate · Day 7 home dumbbell session</p></div><span class="tag">${todayLog.length} / ${d[2].length} completed today</span><button class="btn subtle" onclick="window.editWorkoutPlan()">Edit / Add plan</button></div><div class="workoutdays">${plan.map((x, i) => `<button class="daybtn ${activeDay === i + 1 ? "active" : ""}" data-day="${i + 1}"><strong>DAY ${i + 1} · ${x[0]}</strong><small>${x[1]}</small></button>`).join("")}</div><div class="sectionhead"><div><h2>Day ${activeDay}: ${d[0]}</h2><p>${d[1]} · Tap circle when complete</p></div><button class="btn" onclick="window.logWorkoutDay()">Save workout</button></div><div class="grid exercisegrid">${d[2]
+          `<div class="sectionhead"><div><h2>7-day strength plan</h2><p>Beginner to intermediate · Day 7 home dumbbell session</p></div><span class="tag">${todayLog.length} / ${d[2].length} completed today</span><button class="btn subtle" onclick="window.editWorkoutPlan()">Edit / Add plan</button></div><div class="workoutdays">${plan.map((x, i) => `<button class="daybtn ${activeDay === i + 1 ? "active" : ""}" data-day="${i + 1}"><strong>DAY ${i + 1} · ${x[0]}</strong><small>${x[1]}</small></button>`).join("")}</div><div class="sectionhead"><div><h2>Day ${activeDay}: ${d[0]}</h2><p>${d[1]} · Tap circle when complete</p></div><button class="btn" onclick="window.logWorkoutDay()">Save workout</button></div><div class="rest-timer card"><div class="rest-timer-copy"><h3>Set rest timer</h3><p>Sets ke beech break lo · maximum 3 minutes</p></div><div class="rest-timer-controls"><div class="rest-presets"><button type="button" data-rest-seconds="60">1 min</button><button type="button" data-rest-seconds="120">2 min</button><button type="button" data-rest-seconds="180">3 min</button></div><strong class="rest-clock" id="restClock" role="timer">03:00</strong><button type="button" class="btn" id="restStart">Start</button><button type="button" class="btn subtle" id="restPause">Pause</button><button type="button" class="btn subtle" id="restReset">Reset</button></div></div><div class="grid exercisegrid">${d[2]
             .map(([name, reps], i) => {
               let done = todayLog.some((x) => caseKey(x.exercise) === caseKey(name));
               return `<div class="card exercise ${done ? "checked" : ""}"><div class="exercise-top"><div><h4>${i + 1}. ${name}</h4><p>${reps}</p></div><button class="done" data-exercise="${esc(name)}">${done ? "✓" : "○"}</button></div></div>`;
@@ -1588,6 +1676,13 @@
             .join(
               "",
             )}</div><div class="notice" style="margin-top:15px">Warm-up 5–10 min karein, exercise form par dhyan dein aur sets ke beech 60–90 sec rest lein. Pain ho to exercise rok dein.</div>`;
+        document.querySelectorAll("[data-rest-seconds]").forEach(button => {
+          button.onclick = () => setRestTimerDuration(Number(button.dataset.restSeconds));
+        });
+        $("#restStart").onclick = startRestTimer;
+        $("#restPause").onclick = pauseRestTimer;
+        $("#restReset").onclick = resetRestTimer;
+        updateRestTimerDisplay();
         document.querySelectorAll("[data-day]").forEach(
           (b) =>
             (b.onclick = () => {
@@ -1671,11 +1766,59 @@
         $("#page-history").innerHTML =
           `<div class="sectionhead"><div><h2>Aapki consistency, ek jagah.</h2><p>Saved money entries aur aaj ke workout/meal check-ins.</p></div></div><div class="grid stats"><div class="card"><div class="stat-head">Money entries <span class="stat-icon">↗</span></div><div class="stat-value">${transactions.length}</div><div class="stat-note">Ab tak total</div></div><div class="card"><div class="stat-head">Workout today <span class="stat-icon">◉</span></div><div class="stat-value">${workouts.length}</div><div class="stat-note">Exercises complete</div></div><div class="card"><div class="stat-head">Meals today <span class="stat-icon">♡</span></div><div class="stat-value">${meals.length} / 7</div><div class="stat-note">Meal check-ins</div></div><div class="card"><div class="stat-head">Active workout days <span class="stat-icon">✳</span></div><div class="stat-value">${days.size}</div><div class="stat-note">Days with logged exercise</div></div></div><div class="card activity"><div class="card-title"><h3>All money activity</h3><small>${transactions.length} entries</small></div>${transactions.length ? transactions.map(txrow).join("") : '<div class="empty"><strong>History yahin build hogi</strong>Money tab se apni pehli entry add karein.</div>'}</div><div class="card activity"><div class="card-title"><h3>Aaj ke check-ins</h3><small>Workout & meals</small></div>${workouts.map((x) => `<div class="txrow"><div class="txico">◉</div><div><b>${esc(x.exercise)}</b><small>Day ${x.day_number} workout</small></div><span class="tag income">Done</span></div>`).join("")}${meals.map((x) => `<div class="txrow"><div class="txico">♡</div><div><b>${esc(x.meal_name)}</b><small>Meal check-in</small></div><span class="tag income">Done</span></div>`).join("") || (!workouts.length ? '<div class="empty">Abhi check-ins nahi hain.</div>' : "")}</div>`;
       }
+      function shiftDate(date, days) {
+        const value = new Date(`${date}T12:00:00`);
+        value.setDate(value.getDate() + days);
+        return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
+      }
+      function weeklyWeightComparison(logs = weightLogs) {
+        const sorted = [...logs].sort((a, b) => b.measured_on.localeCompare(a.measured_on));
+        const latest = sorted[0] || null;
+        const previous = latest ? sorted.find(x => x.measured_on <= shiftDate(latest.measured_on, -7)) || null : null;
+        return { latest, previous, change: latest && previous ? Number(latest.weight_kg) - Number(previous.weight_kg) : null };
+      }
+      function renderWeight() {
+        const { latest, previous, change } = weeklyWeightComparison();
+        const todayEntry = weightLogs.find(x => x.measured_on === today());
+        const daysSince = latest ? Math.floor((new Date(`${today()}T12:00:00`) - new Date(`${latest.measured_on}T12:00:00`)) / 86400000) : null;
+        const dueText = !latest ? "Apni pehli reading record karein" : daysSince >= 7 ? "Weekly weight check due hai" : `Agla weekly check ${new Date(`${shiftDate(latest.measured_on, 7)}T12:00:00`).toLocaleDateString("en-IN", {day:"numeric",month:"short"})} se`; 
+        const chartRows = [...weightLogs].slice(0, 10).reverse();
+        const chart = chartRows.length > 1 ? (() => {
+          const values = chartRows.map(x => Number(x.weight_kg));
+          const min = Math.min(...values), max = Math.max(...values), range = Math.max(1, max - min);
+          const points = chartRows.map((x, i) => ({x: 36 + (i * 648 / (chartRows.length - 1)), y: 164 - ((Number(x.weight_kg) - min) / range) * 118, value: Number(x.weight_kg), date: x.measured_on}));
+          return `<svg class="weight-chart" viewBox="0 0 720 210" role="img" aria-label="Weight history chart"><line x1="30" y1="166" x2="690" y2="166" stroke="#dfe5dc"/>${[0,1,2].map(i => `<line x1="30" y1="${46+i*59}" x2="690" y2="${46+i*59}" stroke="#eef0ec"/>`).join("")}<polyline fill="none" stroke="#83a943" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" points="${points.map(p=>`${p.x},${p.y}`).join(" ")}"/>${points.map((p,i)=>`<circle cx="${p.x}" cy="${p.y}" r="5" fill="#83a943"><title>${p.value} kg · ${p.date}</title></circle>${i===0||i===points.length-1?`<text x="${p.x}" y="${p.y-10}" text-anchor="middle" font-size="11" fill="#25392c">${p.value} kg</text>`:""}`).join("")}<text x="36" y="194" font-size="10" fill="#68766d">${chartRows[0].measured_on.slice(5)}</text><text x="684" y="194" text-anchor="end" font-size="10" fill="#68766d">${chartRows.at(-1).measured_on.slice(5)}</text></svg>`;
+        })() : '<div class="empty">Weight trend chart ke liye kam se kam 2 alag dates ki readings chahiye.</div>';
+        const errorHtml = weightLogError ? `<div class="notice" style="margin-bottom:16px"><b>Weight data load nahi hua.</b> ${esc(weightLogError.message || "Supabase error")}<br><small>Supabase SQL Editor mein <code>weight-tracking-migration.sql</code> run karein, phir dobara load karein.</small></div>` : "";
+        const history = weightLogs.map((x,i) => {
+          const prior = weightLogs.slice(i + 1).find(y => y.measured_on <= shiftDate(x.measured_on, -7));
+          const delta = prior ? Number(x.weight_kg) - Number(prior.weight_kg) : null;
+          return `<div class="weight-history-row"><span>${new Date(`${x.measured_on}T12:00:00`).toLocaleDateString("en-IN", {weekday:"short",day:"numeric",month:"short",year:"numeric"})}${x.note ? `<small style="display:block;color:var(--muted)">${esc(x.note)}</small>` : ""}</span><b>${Number(x.weight_kg).toFixed(1)} kg</b><span class="weight-change ${delta == null ? "" : delta >= 0 ? "gain" : "loss"}">${delta == null ? "—" : `${delta > 0 ? "+" : ""}${delta.toFixed(1)} kg / week`}</span></div>`;
+        }).join("");
+        const weeklyLabel = change == null ? "7 din baad next comparison" : `${change > 0 ? "+" : ""}${change.toFixed(1)} kg`;
+        const weeklyNote = change == null ? (latest ? `Latest ${Number(latest.weight_kg).toFixed(1)} kg · ${dueText}` : dueText) : `Pichhli 7+ din purani reading ${Number(previous.weight_kg).toFixed(1)} kg thi · ${dueText}`;
+        $("#page-weight").innerHTML = `${errorHtml}<div class="sectionhead"><div><h2>Weekly weight progress</h2><p>Har hafte apna weight record karein aur pichhle hafte se badlav dekhein.</p></div><span class="tag">${dueText}</span></div><div class="grid stats"><div class="card"><div class="stat-head">Latest weight</div><div class="stat-value">${latest ? `${Number(latest.weight_kg).toFixed(1)} kg` : "—"}</div><div class="stat-note">${latest ? new Date(`${latest.measured_on}T12:00:00`).toLocaleDateString("en-IN", {day:"numeric",month:"short",year:"numeric"}) : "Abhi reading nahi"}</div></div><div class="card"><div class="stat-head">7+ day change</div><div class="stat-value ${change == null ? "" : change >= 0 ? "pos" : "neg"}">${weeklyLabel}</div><div class="stat-note">${weeklyNote}</div></div><div class="card"><div class="stat-head">Total readings</div><div class="stat-value">${weightLogs.length}</div><div class="stat-note">Supabase mein saved</div></div><div class="card"><div class="stat-head">Record cadence</div><div class="stat-value">Weekly</div><div class="stat-note">Similar time/conditions mein measure karein</div></div></div><div class="weight-grid"><div class="card"><div class="card-title"><h3>${todayEntry ? "Aaj ka weight update karein" : "Aaj ka weight record karein"}</h3><small>kg mein</small></div><form id="weightForm" class="weight-form"><div class="field"><label>Weight (kg)</label><input class="input" id="weightValue" type="number" min="1" max="500" step="0.1" value="${todayEntry ? Number(todayEntry.weight_kg) : ""}" placeholder="jaise 50.5" required></div><div class="field"><label>Date</label><input class="input" id="weightDate" type="date" value="${todayEntry?.measured_on || today()}" required></div><div class="field"><label>Note (optional)</label><input class="input" id="weightNote" type="text" value="${esc(todayEntry?.note || "")}" placeholder="Morning, before breakfast"></div><button class="btn" id="saveWeight">${todayEntry ? "Update reading" : "Save weekly reading"}</button></form><small style="display:block;color:var(--muted);margin-top:10px">Har alag date ki reading Supabase history mein save rahegi. Usi date par dobara save karne se reading update hogi.</small></div><div class="card"><div class="card-title"><h3>Weight trend</h3><small>Latest 10 readings</small></div>${chart}</div></div><div class="card activity"><div class="card-title"><h3>Weight history</h3><small>${weightLogs.length} readings · weekly difference</small></div>${history || '<div class="empty">Pehli reading save karne ke baad history yahan dikhegi.</div>'}</div>`;
+        $("#weightForm").onsubmit = async e => {
+          e.preventDefault();
+          const payload = { user_id:user.id, measured_on:$("#weightDate").value, weight_kg:Number($("#weightValue").value), note:$("#weightNote").value.trim() || null };
+          const button = $("#saveWeight"); button.disabled = true;
+          const { data, error } = await supabase.from("weight_logs").upsert(payload, { onConflict:"user_id,measured_on" }).select().single();
+          button.disabled = false;
+          if (error) { weightLogError = error; toast(error.message.includes("weight_logs") || error.message.includes("schema cache") ? "Pehle Supabase mein weight-tracking-migration.sql run karein" : error.message); return; }
+          weightLogError = null;
+          weightLogs = [data, ...weightLogs.filter(x => x.measured_on !== data.measured_on)].sort((a,b)=>b.measured_on.localeCompare(a.measured_on));
+          renderWeight(); refreshSummaryIfReady(); toast("Weight reading save ho gayi ✓");
+        };
+      }
       function renderSummary() {
         const [year, month] = summaryMonth.split("-").map(Number);
         const monthTransactions = transactions.filter(x => x.occurred_on?.startsWith(summaryMonth));
         const monthWorkouts = workoutHistory.filter(x => x.log_date?.startsWith(summaryMonth));
         const monthMeals = mealHistory.filter(x => x.log_date?.startsWith(summaryMonth));
+        const monthWeightLogs = weightLogs.filter(x => x.measured_on?.startsWith(summaryMonth));
+        const latestMonthWeight = monthWeightLogs[0] || null;
+        const priorMonthWeight = latestMonthWeight ? weightLogs.find(x => x.measured_on <= shiftDate(latestMonthWeight.measured_on, -7)) || null : null;
+        const monthWeightChange = latestMonthWeight && priorMonthWeight ? Number(latestMonthWeight.weight_kg) - Number(priorMonthWeight.weight_kg) : null;
         const sumKind = kind => monthTransactions.filter(x => x.kind === kind).reduce((sum, x) => sum + Number(x.amount || 0), 0);
         const expense = sumKind("expense"), income = sumKind("income"), lent = sumKind("lent"), repayment = sumKind("repayment"), borrowed = sumKind("borrowed");
         const pendingLent = transactions.filter(x => x.kind === "lent" && !x.is_settled).reduce((a, x) => a + Number(x.amount), 0);
@@ -1708,6 +1851,10 @@
         const financeRows = monthTransactions.length
           ? monthTransactions.map(x => `<tr><td>${new Date(`${x.occurred_on}T12:00:00`).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</td><td>${esc(capitalizeWords(x.title || "Entry"))}</td><td>${esc({ expense: "Kharcha", income: "Income", lent: "Udhar diya", repayment: "Udhar wapas", borrowed: "Udhar liya" }[x.kind] || x.kind)}</td><td>${esc(capitalizeWords(x.category || "—"))}</td><td>${esc(capitalizeWords(x.person || "—"))}</td><td>${money(x.amount)}</td><td>${loanStatusText(x)}</td></tr>`).join("")
           : '<tr><td colspan="7" class="empty">Is month mein koi money entry nahi hai.</td></tr>';
+        const weightSummaryRows = monthWeightLogs.length
+          ? monthWeightLogs.map(x => `<tr><td>${new Date(`${x.measured_on}T12:00:00`).toLocaleDateString("en-IN", {day:"2-digit",month:"short"})}</td><td>${Number(x.weight_kg).toFixed(1)} kg</td><td>${esc(x.note || "—")}</td></tr>`).join("")
+          : '<tr><td colspan="3" class="empty">Is month mein weight reading record nahi hui.</td></tr>';
+        const weightSummaryHtml = `<div class="card activity"><div class="card-title"><h3>Weight gain progress</h3><small>${monthWeightLogs.length} readings this month</small></div><p>${latestMonthWeight ? `Latest: <b>${Number(latestMonthWeight.weight_kg).toFixed(1)} kg</b> · ${monthWeightChange == null ? "7+ din purani comparison reading add karne par weekly change dikhega." : `7+ din mein ${monthWeightChange > 0 ? "+" : ""}${monthWeightChange.toFixed(1)} kg`}` : "Is month mein weight data available nahi hai."}</p><div class="table-wrap"><table class="table summary-daily-table"><thead><tr><th>Date</th><th>Weight</th><th>Note</th></tr></thead><tbody>${weightSummaryRows}</tbody></table></div></div>`;
         const monthLabel = new Date(year, month - 1, 1).toLocaleDateString("en-IN", { month: "long", year: "numeric" });
         const netMovement = income + repayment + borrowed + lentReturnedInMonth - expense - lent - borrowedRepaidInMonth;
         const expenseByCategory = Object.entries(monthTransactions.filter(x => x.kind === "expense").reduce((acc, x) => {
@@ -1728,7 +1875,7 @@
         const categoryLegend = expenseByCategory.length ? expenseByCategory.map(([category, amount], i) => `<div class="report-legend-item"><i class="report-swatch" style="background:${pieColors[i % pieColors.length]}"></i>${esc(category)} · ${money(amount)}</div>`).join("") : '<div class="report-legend-item">Is month mein expense data nahi.</div>';
         const maxConsistency = Math.max(1, workoutDates.size, mealDates.size);
         const maxCash = Math.max(1, income + repayment + borrowed + lentReturnedInMonth, expense + lent + borrowedRepaidInMonth);
-        const conclusionHtml = `<section class="card report-conclusion"><div class="card-title"><h3>Monthly conclusion & charts</h3><small>${esc(monthLabel)}</small></div><p>Is mahine <b>${workoutDates.size}</b> din workout log hua, <b>${mealDates.size}</b> din meals log hue, aur <b>${monthTransactions.length}</b> money entries record hui. Kharchon mein sabse badi category <b>${expenseByCategory.length ? esc(expenseByCategory[0][0]) + ` (${money(expenseByCategory[0][1])})` : "—"}</b> rahi. Net money movement: <b>${money(netMovement)}</b>.</p><div class="report-chart-grid"><div><h4>Workout & meal logging · days</h4><div class="report-bar-row"><span>Workout days</span><div class="report-bar-track"><div class="report-bar-fill" style="width:${Math.min(100, workoutDates.size / daysCount * 100)}%"></div></div><b>${workoutDates.size}/${daysCount}</b></div><div class="report-bar-row"><span>Meal log days</span><div class="report-bar-track"><div class="report-bar-fill" style="width:${Math.min(100, mealDates.size / daysCount * 100)}%"></div></div><b>${mealDates.size}/${daysCount}</b></div><h4>Money movement · rupees</h4><div class="report-bar-row"><span>Money in*</span><div class="report-bar-track"><div class="report-bar-fill" style="width:${Math.min(100, (income + repayment + borrowed + lentReturnedInMonth) / maxCash * 100)}%"></div></div><b>${money(income + repayment + borrowed + lentReturnedInMonth)}</b></div><div class="report-bar-row"><span>Money out*</span><div class="report-bar-track"><div class="report-bar-fill out" style="width:${Math.min(100, (expense + lent + borrowedRepaidInMonth) / maxCash * 100)}%"></div></div><b>${money(expense + lent + borrowedRepaidInMonth)}</b></div><small>*Income, udhar liya/wapas mila vs kharcha, udhar diya/chukaya.</small></div><div><h4>Expense category split</h4><div class="report-pie-wrap"><div class="report-pie" style="background:${expensePie}"></div><div class="report-legend">${categoryLegend}</div></div></div></div></section>`;
+        const conclusionHtml = `<section class="card report-conclusion"><div class="card-title"><h3>Monthly conclusion & charts</h3><small>${esc(monthLabel)}</small></div><p>Is mahine <b>${workoutDates.size}</b> din workout log hua, <b>${mealDates.size}</b> din meals log hue, <b>${monthWeightLogs.length}</b> weight readings aur <b>${monthTransactions.length}</b> money entries record hui. Kharchon mein sabse badi category <b>${expenseByCategory.length ? esc(expenseByCategory[0][0]) + ` (${money(expenseByCategory[0][1])})` : "—"}</b> rahi. Net money movement: <b>${money(netMovement)}</b>.</p><div class="report-chart-grid"><div><h4>Workout & meal logging · days</h4><div class="report-bar-row"><span>Workout days</span><div class="report-bar-track"><div class="report-bar-fill" style="width:${Math.min(100, workoutDates.size / daysCount * 100)}%"></div></div><b>${workoutDates.size}/${daysCount}</b></div><div class="report-bar-row"><span>Meal log days</span><div class="report-bar-track"><div class="report-bar-fill" style="width:${Math.min(100, mealDates.size / daysCount * 100)}%"></div></div><b>${mealDates.size}/${daysCount}</b></div><h4>Money movement · rupees</h4><div class="report-bar-row"><span>Money in*</span><div class="report-bar-track"><div class="report-bar-fill" style="width:${Math.min(100, (income + repayment + borrowed + lentReturnedInMonth) / maxCash * 100)}%"></div></div><b>${money(income + repayment + borrowed + lentReturnedInMonth)}</b></div><div class="report-bar-row"><span>Money out*</span><div class="report-bar-track"><div class="report-bar-fill out" style="width:${Math.min(100, (expense + lent + borrowedRepaidInMonth) / maxCash * 100)}%"></div></div><b>${money(expense + lent + borrowedRepaidInMonth)}</b></div><small>*Income, udhar liya/wapas mila vs kharcha, udhar diya/chukaya.</small></div><div><h4>Expense category split</h4><div class="report-pie-wrap"><div class="report-pie" style="background:${expensePie}"></div><div class="report-legend">${categoryLegend}</div></div></div></div></section>`;
         const currentWorkoutOverride = planOverrides.find(x => x.plan_type === "workout" && x.target_date === today());
         const currentWorkoutDay = Number(currentWorkoutOverride?.plan_day || workouts[0]?.day_number || (new Date().getDay() || 7));
         const currentWorkout = plan[currentWorkoutDay - 1];
@@ -1738,7 +1885,7 @@
           return `<div class="txrow"><div class="txico">${esc(icon)}</div><div><b>${esc(time)} · ${esc(name)}</b><small>${esc(variation?.description || description)}</small></div></div>`;
         }).join("");
         const planSnapshotHtml = `<div class="grid dashgrid"><div class="card"><div class="card-title"><h3>Aaj ka workout plan · Day ${currentWorkoutDay}${currentWorkout ? ` · ${esc(currentWorkout[0])}` : ""}</h3><small>Latest saved plan</small></div>${currentWorkout ? currentWorkout[2].map(([name, reps]) => `<div class="txrow"><div class="txico">◉</div><div><b>${esc(name)}</b><small>${esc(reps)}</small></div></div>`).join("") : '<div class="empty">Workout plan load nahi hua.</div>'}</div><div class="card"><div class="card-title"><h3>Aaj ka diet plan</h3><small>Latest saved plan</small></div>${currentMealsSnapshot || '<div class="empty">Diet plan load nahi hua.</div>'}</div></div>`;
-        $("#page-summary").innerHTML = `<div class="sectionhead no-print"><div><h2>Monthly progress report</h2><p>Supabase se aayi money, workout aur meal history.</p></div><div style="display:flex;gap:8px;align-items:center"><input class="input" id="summaryMonth" type="month" value="${esc(summaryMonth)}"><button class="btn" id="downloadSummary">↓ Download PDF</button></div></div><div class="notice no-print">PDF ke liye button dabayein, phir browser print window mein <b>Save as PDF</b> chunein.</div><div class="welcome summary-cover"><div class="wtext"><div class="eyebrow" style="color:#9eaf9f">FITLEDGER · MONTHLY REPORT</div><h2>${esc(monthLabel)}</h2><p>Money habits · Workout consistency · Meal tracking</p></div><div class="waction"><span class="tag" style="background:#ffffff19;color:white">${workoutDates.size} workout days</span></div></div>${planSnapshotHtml}<div class="grid stats"><div class="card"><div class="stat-head">Total kharcha <span class="stat-icon">↘</span></div><div class="stat-value">${money(expense)}</div><div class="stat-note">${monthTransactions.filter(x => x.kind === "expense").length} entries</div></div><div class="card"><div class="stat-head">Income <span class="stat-icon">↗</span></div><div class="stat-value">${money(income)}</div><div class="stat-note">${monthTransactions.filter(x => x.kind === "income").length} entries</div></div><div class="card"><div class="stat-head">Udhar diya / liya <span class="stat-icon">⇄</span></div><div class="stat-value">${money(lent)} / ${money(borrowed)}</div><div class="stat-note">${money(lentReturnedInMonth)} wapas mile · ${money(borrowedRepaidInMonth)} chukaye · Pending lena ${money(pendingLent)} / dena ${money(pendingBorrowed)} · Net ${money(netMovement)}</div></div><div class="card"><div class="stat-head">Training & diet <span class="stat-icon">◉</span></div><div class="stat-value">${monthWorkouts.length} / ${monthMeals.length}</div><div class="stat-note">Exercise / meal check-ins · ${mealDates.size} meal-log days</div></div></div><div class="grid dashgrid"><div class="card"><div class="card-title"><h3>Weekly money movement</h3><small>Income + udhar liya vs kharcha + diya</small></div><div class="bars">${weeks.map(w => `<div class="bar-col"><div class="bar-pair"><i class="bar in" title="${money(w.got)}" style="height:${Math.max(3, w.got / maxWeek * 100)}%"></i><i class="bar out" title="${money(w.out)}" style="height:${Math.max(3, w.out / maxWeek * 100)}%"></i></div><small>${w.label}</small></div>`).join("")}</div><div class="legend"><span><i class="dot" style="background:#c5f36b"></i>Aaye</span><span><i class="dot" style="background:#25392c"></i>Gaye / udhar</span></div></div><div class="card"><div class="card-title"><h3>Monthly consistency</h3><small>${daysCount} calendar days</small></div><div class="quick"><div><span>◉</span><b>${workoutDates.size}</b><small> workout days</small></div><div><span>♡</span><b>${mealDates.size}</b><small> meal-log days</small></div><div><span>✓</span><b>${monthWorkouts.length}</b><small> exercises done</small></div><div><span>₹</span><b>${monthTransactions.length}</b><small> money entries</small></div></div></div></div><div class="card activity"><div class="card-title"><h3>Daily workout & meal progress</h3><small>${esc(monthLabel)}</small></div><div class="table-wrap"><table class="table summary-daily-table"><thead><tr><th>Date</th><th>Workout plan</th><th>Exercises checked</th><th>Meals</th></tr></thead><tbody>${workoutDailyRows}</tbody></table></div></div><div class="card activity"><div class="card-title"><h3>Daily money entries</h3><small>${monthTransactions.length} entries</small></div><div class="table-wrap"><table class="table summary-daily-table"><thead><tr><th>Date</th><th>Details</th><th>Type</th><th>Category</th><th>Person</th><th>Amount</th><th>Status</th></tr></thead><tbody>${financeRows}</tbody></table></div></div>${conclusionHtml}`;
+        $("#page-summary").innerHTML = `<div class="sectionhead no-print"><div><h2>Monthly progress report</h2><p>Supabase se aayi money, workout aur meal history.</p></div><div style="display:flex;gap:8px;align-items:center"><input class="input" id="summaryMonth" type="month" value="${esc(summaryMonth)}"><button class="btn" id="downloadSummary">↓ Download PDF</button></div></div><div class="notice no-print">PDF ke liye button dabayein, phir browser print window mein <b>Save as PDF</b> chunein.</div><div class="welcome summary-cover"><div class="wtext"><div class="eyebrow" style="color:#9eaf9f">FITLEDGER · MONTHLY REPORT</div><h2>${esc(monthLabel)}</h2><p>Money habits · Workout consistency · Meal tracking</p></div><div class="waction"><span class="tag" style="background:#ffffff19;color:white">${workoutDates.size} workout days</span></div></div>${planSnapshotHtml}<div class="grid stats"><div class="card"><div class="stat-head">Total kharcha <span class="stat-icon">↘</span></div><div class="stat-value">${money(expense)}</div><div class="stat-note">${monthTransactions.filter(x => x.kind === "expense").length} entries</div></div><div class="card"><div class="stat-head">Income <span class="stat-icon">↗</span></div><div class="stat-value">${money(income)}</div><div class="stat-note">${monthTransactions.filter(x => x.kind === "income").length} entries</div></div><div class="card"><div class="stat-head">Udhar diya / liya <span class="stat-icon">⇄</span></div><div class="stat-value">${money(lent)} / ${money(borrowed)}</div><div class="stat-note">${money(lentReturnedInMonth)} wapas mile · ${money(borrowedRepaidInMonth)} chukaye · Pending lena ${money(pendingLent)} / dena ${money(pendingBorrowed)} · Net ${money(netMovement)}</div></div><div class="card"><div class="stat-head">Training & diet <span class="stat-icon">◉</span></div><div class="stat-value">${monthWorkouts.length} / ${monthMeals.length}</div><div class="stat-note">Exercise / meal check-ins · ${mealDates.size} meal-log days</div></div></div><div class="grid dashgrid"><div class="card"><div class="card-title"><h3>Weekly money movement</h3><small>Income + udhar liya vs kharcha + diya</small></div><div class="bars">${weeks.map(w => `<div class="bar-col"><div class="bar-pair"><i class="bar in" title="${money(w.got)}" style="height:${Math.max(3, w.got / maxWeek * 100)}%"></i><i class="bar out" title="${money(w.out)}" style="height:${Math.max(3, w.out / maxWeek * 100)}%"></i></div><small>${w.label}</small></div>`).join("")}</div><div class="legend"><span><i class="dot" style="background:#c5f36b"></i>Aaye</span><span><i class="dot" style="background:#25392c"></i>Gaye / udhar</span></div></div><div class="card"><div class="card-title"><h3>Monthly consistency</h3><small>${daysCount} calendar days</small></div><div class="quick"><div><span>◉</span><b>${workoutDates.size}</b><small> workout days</small></div><div><span>♡</span><b>${mealDates.size}</b><small> meal-log days</small></div><div><span>✓</span><b>${monthWorkouts.length}</b><small> exercises done</small></div><div><span>₹</span><b>${monthTransactions.length}</b><small> money entries</small></div></div></div></div><div class="card activity"><div class="card-title"><h3>Daily workout & meal progress</h3><small>${esc(monthLabel)}</small></div><div class="table-wrap"><table class="table summary-daily-table"><thead><tr><th>Date</th><th>Workout plan</th><th>Exercises checked</th><th>Meals</th></tr></thead><tbody>${workoutDailyRows}</tbody></table></div></div><div class="card activity"><div class="card-title"><h3>Daily money entries</h3><small>${monthTransactions.length} entries</small></div><div class="table-wrap"><table class="table summary-daily-table"><thead><tr><th>Date</th><th>Details</th><th>Type</th><th>Category</th><th>Person</th><th>Amount</th><th>Status</th></tr></thead><tbody>${financeRows}</tbody></table></div></div>${weightSummaryHtml}${conclusionHtml}`;
         $("#summaryMonth").onchange = () => { summaryMonth = $("#summaryMonth").value || today().slice(0, 7); renderSummary(); };
         $("#downloadSummary").onclick = () => window.print();
       }
