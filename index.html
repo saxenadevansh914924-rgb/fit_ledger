@@ -794,6 +794,7 @@
       .field select {
         width: 100%;
       }
+      .field textarea { width:100%; min-height:112px; resize:vertical; }
       .modal-actions {
         display: flex;
         justify-content: end;
@@ -1111,6 +1112,7 @@
       let user = null,
         transactions = [],
         transactionsError = null,
+        personContacts = [],
         workouts = [],
         workoutHistory = [],
         weightLogs = [],
@@ -1297,12 +1299,63 @@
       function money(n) {
         return (
           "₹" +
-          Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })
+          Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })
         );
+      }
+      function loanRemaining(t) {
+        return Math.max(0, Math.round((Number(t.amount || 0) - Number(t.repaid_amount || (t.is_settled ? t.amount : 0))) * 100) / 100);
+      }
+      function whatsappNumber(value) {
+        let digits = String(value || "").replace(/\D/g, "");
+        if (digits.length === 10) digits = `91${digits}`;
+        return digits;
+      }
+      function loanReceiptMessage({ kind, amount, occurred_on, date, person, title, note, receipt_note }) {
+        // Parse the date input's ISO value as calendar parts so browser timezone
+        // differences cannot turn it into an Invalid Date or shift the day.
+        const receiptDate = occurred_on || date;
+        const [year, month, day] = String(receiptDate || "").split("-").map(Number);
+        const dateLabel = year && month && day
+          ? new Date(Date.UTC(year, month - 1, day)).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric", timeZone: "UTC" })
+          : String(receiptDate || "Date not set");
+        const value = money(amount);
+        const purpose = note || title;
+        const header = `╭────────── FITLEDGER ──────────╮\n          PAYMENT RECEIPT\n╰───────────────────────────────╯`;
+        const amountLine = `💰  Rakam        ${value}`;
+        const dateLine = `📅  Tareekh      ${dateLabel}`;
+        const personalLine = receipt_note?.trim() ? `\n\n💌  Aapki baat\n╭───────────────────────────────╮\n${receipt_note.trim()}\n╰───────────────────────────────╯` : "";
+        if (kind === "lent") return `${header}\n\nNamaste ${person} ji,\n\nDevansh ne aapko udhaar diya.\n\n${amountLine}\n📝  Kis liye      ${purpose || "Udhaar"}\n${dateLine}${personalLine}\n\nYeh digital receipt aapke record ke liye hai.\n— Devansh`;
+        if (kind === "borrowed") return `${header}\n\nNamaste ${person} ji,\n\nDevansh ne aapse udhaar liya.\n\n${amountLine}\n📝  Kis liye      ${purpose || "Udhaar"}\n${dateLine}${personalLine}\n\nYeh digital receipt aapke record ke liye hai.\n— Devansh`;
+        return `${header}\n\nNamaste ${person} ji,\n\nDevansh ne udhaar ki rakam wapas ki.\n\n${amountLine}\n📝  Vivaran       ${purpose || "Udhaar wapsi"}\n${dateLine}${personalLine}\n\nYeh digital receipt aapke record ke liye hai.\n— Devansh`;
+      }
+      function loanRepaymentReceipt(loan, paymentAmount, totalRepaid, remaining, paidOn, receiptNote = "") {
+        const formatDate = (value) => {
+          const [year, month, day] = String(value || "").split("-").map(Number);
+          return year && month && day
+            ? new Date(Date.UTC(year, month - 1, day)).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric", timeZone: "UTC" })
+            : String(value || "Date not set");
+        };
+        const purpose = loan.note || loan.title || "Udhaar";
+        const header = `╭────────── FITLEDGER ──────────╮\n          PAYMENT RECEIPT\n╰───────────────────────────────╯`;
+        const details = `💰  Kul udhaar   ${money(loan.amount)}\n📝  Kis liye      ${purpose}\n📅  Liye the     ${formatDate(loan.occurred_on)}\n✅  Aaj wapas     ${money(paymentAmount)} · ${formatDate(paidOn)}\n↻  Kul wapas     ${money(totalRepaid)}\n⌛  Abhi baaki    ${money(remaining)}`;
+        const personalLine = receiptNote.trim() ? `\n\n💌  Aapki baat\n╭───────────────────────────────╮\n${receiptNote.trim()}\n╰───────────────────────────────╯` : "";
+        const completionLine = remaining > 0
+          ? loan.kind === "borrowed"
+            ? `${money(remaining)} ki shesh rakam baaki hai. Devansh ise baad mein ada karega.`
+            : `${money(remaining)} ki shesh rakam baaki hai. Aap ise baad mein ada karenge.`
+          : "Udhaar poori tarah chukta ho gaya hai. Dhanyavaad.";
+        const paymentType = remaining > 0 ? "anshik bhugtan" : "antim bhugtan";
+        if (loan.kind === "lent") return `${header}\n\nNamaste ${loan.person} ji,\n\nAapne Devansh se ${money(loan.amount)} udhaar liya tha. Aaj ${formatDate(paidOn)} ko aapki taraf se ${money(paymentAmount)} ka ${paymentType} Devansh ko prapt hua hai.\n\n${details}${personalLine}\n\n${completionLine}\n— Devansh`;
+        return `${header}\n\nNamaste ${loan.person} ji,\n\nDevansh ne aapse ${money(loan.amount)} udhaar liya tha. Aaj ${formatDate(paidOn)} ko Devansh ki taraf se ${money(paymentAmount)} ka ${paymentType} aapko kiya gaya hai.\n\n${details}${personalLine}\n\n${completionLine}\n— Devansh`;
       }
       function loanStatusText(t) {
         if (t.kind !== "lent" && t.kind !== "borrowed") return "—";
-        if (!t.is_settled) return t.kind === "lent" ? "Milna baaki" : "Dena baaki";
+        if (!t.is_settled) {
+          const remaining = loanRemaining(t);
+          const repaid = Number(t.repaid_amount || 0);
+          if (repaid > 0) return `${money(repaid)} wapas · ${money(remaining)} baaki`;
+          return t.kind === "lent" ? "Milna baaki" : "Dena baaki";
+        }
         const label = t.kind === "lent" ? "Wapas mila" : "Wapas kiya";
         return t.settled_on
           ? `${label} · ${new Date(`${t.settled_on}T12:00:00`).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}`
@@ -1417,6 +1470,15 @@
         }[p];
         render();
       }
+      function syncPersonContacts() {
+        const byPerson = new Map();
+        for (const tx of transactions) {
+          if (tx.person && tx.whatsapp_phone && !byPerson.has(caseKey(tx.person))) {
+            byPerson.set(caseKey(tx.person), { person: tx.person, phone: tx.whatsapp_phone });
+          }
+        }
+        personContacts = [...byPerson.values()].sort((a, b) => a.person.localeCompare(b.person));
+      }
       async function loadData() {
         const [a, b, c, daysResult, profileResult, mealsResult, weeklyResult, overridesResult, weightResult] = await Promise.all([
           supabase.from("transactions").select("*").order("occurred_on", { ascending: false }),
@@ -1433,6 +1495,7 @@
         transactions = a.error ? [] : a.data || [];
         weightLogError = weightResult.error || null;
         weightLogs = weightResult.error ? [] : weightResult.data || [];
+        syncPersonContacts();
         workoutHistory = b.error ? [] : b.data || [];
         workouts = workoutHistory.filter((x) => x.log_date === today());
         mealHistory = c.error ? [] : c.data || [];
@@ -1512,10 +1575,10 @@
             .reduce((a, t) => a + +t.amount, 0),
           lent = transactions
             .filter((t) => t.kind === "lent" && !t.is_settled)
-            .reduce((a, t) => a + +t.amount, 0),
+            .reduce((a, t) => a + loanRemaining(t), 0),
           borrowed = transactions
             .filter((t) => t.kind === "borrowed" && !t.is_settled)
-            .reduce((a, t) => a + +t.amount, 0);
+            .reduce((a, t) => a + loanRemaining(t), 0);
         let daySpend = transactions
             .filter((t) => t.kind === "expense" && t.occurred_on === today())
             .reduce((a, t) => a + +t.amount, 0),
@@ -1563,15 +1626,15 @@
         );
         const total = (kind) => list.filter(t => t.kind === kind).reduce((sum, t) => sum + Number(t.amount || 0), 0);
         const personLoans = moneyPersonFilter ? transactions.filter(t => caseKey(t.person) === moneyPersonFilter && ["lent", "borrowed"].includes(t.kind) && !t.is_settled) : [];
-        const personLent = personLoans.filter(t => t.kind === "lent").reduce((sum, t) => sum + Number(t.amount || 0), 0);
-        const personBorrowed = personLoans.filter(t => t.kind === "borrowed").reduce((sum, t) => sum + Number(t.amount || 0), 0);
+        const personLent = personLoans.filter(t => t.kind === "lent").reduce((sum, t) => sum + loanRemaining(t), 0);
+        const personBorrowed = personLoans.filter(t => t.kind === "borrowed").reduce((sum, t) => sum + loanRemaining(t), 0);
         const personNet = personLent - personBorrowed;
         const personBalanceHtml = moneyPersonFilter ? `<div class="card person-balance"><div><small>${esc(people.find(([key]) => key === moneyPersonFilter)?.[1] || moneyPersonFilter)} · pending udhar ka hisaab</small><div class="person-balance-breakdown">${money(personLent)} aapne diye · ${money(personBorrowed)} aapne liye</div></div><div class="person-balance-total ${personNet < 0 ? "neg" : "pos"}">${personNet > 0 ? `${money(personNet)} lene hain` : personNet < 0 ? `${money(Math.abs(personNet))} dene hain` : "Koi pending udhar nahi"}</div></div>` : "";
         const errorHtml = transactionsError
           ? `<div class="notice" style="margin-bottom:16px"><b>Money data load nahi hua.</b> ${esc(transactionsError.message || "Supabase error")}<br><small>Supabase mein transactions table, policies aur setup SQL check karein.</small><br><button class="btn subtle" id="retryMoney" style="margin-top:10px">Dobara load karein</button></div>`
           : "";
-        const rows = list.map(t => `<div class="txrow"><div class="txico">${({expense:"↘",income:"↗",lent:"⇄",repayment:"✓",borrowed:"↙"})[t.kind] || "₹"}</div><div class="tx-main"><b>${esc(capitalizeWords(t.title || t.category || "Entry"))}</b><small>${esc(capitalizeWords(t.category || "General"))} · ${t.occurred_on ? new Date(t.occurred_on + "T12:00").toLocaleDateString("en-IN", {day:"numeric",month:"short",year:"numeric"}) : "Date missing"}${t.person ? " · " + esc(capitalizeWords(t.person)) : ""}${t.note ? " · " + esc(capitalizeWords(t.note)) : ""}</small></div><div class="txamt ${["income","repayment","borrowed"].includes(t.kind) ? "pos" : "neg"}">${["income","repayment","borrowed"].includes(t.kind) ? "+" : "−"}${money(t.amount)}</div>${["lent","borrowed"].includes(t.kind) ? `<label class="loan-check"><input type="checkbox" data-loan-status="${esc(String(t.id))}" ${t.is_settled ? "checked" : ""}><span>${t.is_settled ? (t.kind === "lent" ? "Wapas mila" : "Wapas kiya") : (t.kind === "lent" ? "Pending lena" : "Pending dena")}</span></label>` : ""}</div>`).join("");
-        $("#page-money").innerHTML = `${errorHtml}<div class="sectionhead"><div><h2>Money tracker</h2><p>Kharcha, income aur udhar ka daily hisaab.</p></div><button class="btn" id="addMoneyEntry">+ Entry add</button></div><div class="grid stats"><div class="card"><div class="stat-head">Income</div><div class="stat-value">${money(total("income") + total("repayment"))}</div><div class="stat-note">${money(total("income"))} income · ${money(total("repayment"))} udhar wapas</div></div><div class="card"><div class="stat-head">Kharcha</div><div class="stat-value">${money(total("expense"))}</div><div class="stat-note">${list.filter(t => t.kind === "expense").length} entries</div></div><div class="card"><div class="stat-head">Udhar diya · lena baaki</div><div class="stat-value">${money(list.filter(t => t.kind === "lent" && !t.is_settled).reduce((a,t)=>a+Number(t.amount||0),0))}</div><div class="stat-note">${list.filter(t => t.kind === "lent" && !t.is_settled).length} pending</div></div><div class="card"><div class="stat-head">Udhar liya · dena baaki</div><div class="stat-value">${money(list.filter(t => t.kind === "borrowed" && !t.is_settled).reduce((a,t)=>a+Number(t.amount||0),0))}</div><div class="stat-note">${list.filter(t => t.kind === "borrowed" && !t.is_settled).length} pending</div></div></div><div class="card activity"><div class="money-filters"><input class="input" id="search" type="search" placeholder="Title, category ya person search" value="${esc(search)}"><select class="input" id="kindFilter"><option value="">Sabhi types</option><option value="expense">Kharcha</option><option value="income">Income</option><option value="lent">Udhar diya</option><option value="borrowed">Udhar liya</option></select><input class="input" id="monthFilter" type="month" value="${esc(moneyMonthFilter)}"><select class="input" id="personFilter"><option value="">Sabhi log</option>${people.map(([key, person]) => `<option value="${esc(key)}">${esc(person)}</option>`).join("")}</select><select class="input" id="categoryFilter"><option value="">Sabhi categories</option>${categories.map(([key, category]) => `<option value="${esc(key)}">${esc(category)}</option>`).join("")}</select></div><div class="card-title"><h3>Entries</h3><small>${list.length} entries</small></div>${rows || (transactionsError ? "" : '<div class="empty">Is filter mein koi entry nahi. Nayi entry add karein.</div>')}${personBalanceHtml}</div>`;
+        const rows = list.map(t => `<div class="txrow"><div class="txico">${({expense:"↘",income:"↗",lent:"⇄",repayment:"✓",borrowed:"↙"})[t.kind] || "₹"}</div><div class="tx-main"><b>${esc(capitalizeWords(t.title || t.category || "Entry"))}</b><small>${esc(capitalizeWords(t.category || "General"))} · ${t.occurred_on ? new Date(t.occurred_on + "T12:00").toLocaleDateString("en-IN", {day:"numeric",month:"short",year:"numeric"}) : "Date missing"}${t.person ? " · " + esc(capitalizeWords(t.person)) : ""}${t.note ? " · " + esc(capitalizeWords(t.note)) : ""}</small></div><div class="txamt ${["income","repayment","borrowed"].includes(t.kind) ? "pos" : "neg"}">${["income","repayment","borrowed"].includes(t.kind) ? "+" : "−"}${money(t.amount)}</div>${["lent","borrowed"].includes(t.kind) ? `<label class="loan-check"><input type="checkbox" data-loan-status="${esc(String(t.id))}" ${t.is_settled ? "checked disabled" : ""}><span>${loanStatusText(t)}</span></label>` : ""}</div>`).join("");
+        $("#page-money").innerHTML = `${errorHtml}<div class="sectionhead"><div><h2>Money tracker</h2><p>Kharcha, income aur udhar ka daily hisaab.</p></div><button class="btn" id="addMoneyEntry">+ Entry add</button></div><div class="grid stats"><div class="card"><div class="stat-head">Income</div><div class="stat-value">${money(total("income") + total("repayment"))}</div><div class="stat-note">${money(total("income"))} income · ${money(total("repayment"))} udhar wapas</div></div><div class="card"><div class="stat-head">Kharcha</div><div class="stat-value">${money(total("expense"))}</div><div class="stat-note">${list.filter(t => t.kind === "expense").length} entries</div></div><div class="card"><div class="stat-head">Udhar diya · lena baaki</div><div class="stat-value">${money(list.filter(t => t.kind === "lent" && !t.is_settled).reduce((a,t)=>a+loanRemaining(t),0))}</div><div class="stat-note">${list.filter(t => t.kind === "lent" && !t.is_settled).length} pending</div></div><div class="card"><div class="stat-head">Udhar liya · dena baaki</div><div class="stat-value">${money(list.filter(t => t.kind === "borrowed" && !t.is_settled).reduce((a,t)=>a+loanRemaining(t),0))}</div><div class="stat-note">${list.filter(t => t.kind === "borrowed" && !t.is_settled).length} pending</div></div></div><div class="card activity"><div class="money-filters"><input class="input" id="search" type="search" placeholder="Title, category ya person search" value="${esc(search)}"><select class="input" id="kindFilter"><option value="">Sabhi types</option><option value="expense">Kharcha</option><option value="income">Income</option><option value="lent">Udhar diya</option><option value="borrowed">Udhar liya</option></select><input class="input" id="monthFilter" type="month" value="${esc(moneyMonthFilter)}"><select class="input" id="personFilter"><option value="">Sabhi log</option>${people.map(([key, person]) => `<option value="${esc(key)}">${esc(person)}</option>`).join("")}</select><select class="input" id="categoryFilter"><option value="">Sabhi categories</option>${categories.map(([key, category]) => `<option value="${esc(key)}">${esc(category)}</option>`).join("")}</select></div><div class="card-title"><h3>Entries</h3><small>${list.length} entries</small></div>${rows || (transactionsError ? "" : '<div class="empty">Is filter mein koi entry nahi. Nayi entry add karein.</div>')}${personBalanceHtml}</div>`;
         $("#kindFilter").value = filter;
         $("#personFilter").value = moneyPersonFilter;
         $("#categoryFilter").value = moneyCategoryFilter;
@@ -1587,23 +1650,86 @@
         $("#categoryFilter").onchange = () => { moneyCategoryFilter = $("#categoryFilter").value; renderMoney(); };
       }
       async function toggleLoanSettlement(id, isSettled) {
+        if (isSettled) {
+          const loan = transactions.find(x => String(x.id) === String(id));
+          if (!loan) return renderMoney();
+          const savedContact = personContacts.find(c => caseKey(c.person) === caseKey(loan.person));
+          const savedPhone = whatsappNumber(loan.whatsapp_phone || savedContact?.phone || "");
+          const remaining = loanRemaining(loan);
+          const alreadyRepaid = Number(loan.repaid_amount || 0);
+          $("#modal").innerHTML = "<h2>Udhaar repayment receipt</h2><p>" + esc(loan.person || "Is person") + " ke liye is baar ki wapas ki gayi rakam daalein. Abhi " + money(remaining) + " baaki hain.</p><form id=\"settlementReceiptForm\"><div class=\"field\"><label>WhatsApp number</label><input class=\"input\" id=\"settlementPhone\" type=\"tel\" inputmode=\"tel\" autocomplete=\"tel\" placeholder=\"10 digit mobile number\" value=\"" + esc(savedPhone) + "\" required><small>Yeh number is person ke transactions mein save rahega.</small></div><div class=\"field\"><label>Is baar " + (loan.kind === "lent" ? "kitne rupay wapas mile?" : "kitne rupay wapas kiye?") + "</label><input class=\"input\" id=\"repaymentAmount\" type=\"number\" min=\"0.01\" max=\"" + remaining + "\" step=\"0.01\" value=\"" + remaining + "\" required><small>Pehle wapas hue: " + money(alreadyRepaid) + " · Is baar ke baad baaki: amount ke hisaab se update hoga.</small></div><div class=\"field\"><label>Aapki baat (optional)</label><textarea class=\"input\" id=\"settlementReceiptNote\" placeholder=\"Jo dil se kehna ho, yahan likhein...\"></textarea><small>Yeh message receipt mein ek alag stylish row mein aayega.</small></div><div class=\"modal-actions\"><button type=\"button\" class=\"btn subtle\" id=\"cancelSettlement\">Cancel</button><button class=\"btn\" id=\"confirmSettlement\">Payment record karein · receipt kholein</button></div></form>";
+          $("#modalBack").classList.add("open");
+          $("#cancelSettlement").onclick = () => { closeModal(); renderMoney(); };
+          $("#settlementReceiptForm").onsubmit = async (e) => {
+            e.preventDefault();
+            const phone = whatsappNumber($("#settlementPhone").value);
+            if (phone.length < 10 || phone.length > 15) return toast("Sahi WhatsApp number daalein");
+            const paymentAmount = Number($("#repaymentAmount").value);
+            if (!Number.isFinite(paymentAmount) || paymentAmount <= 0 || paymentAmount > remaining) return toast("Rakam baaki udhaar se zyada nahi ho sakti");
+            const receiptNote = $("#settlementReceiptNote").value.trim();
+            const whatsappTab = window.open("about:blank", "_blank");
+            await saveLoanSettlement(loan, true, phone, whatsappTab, receiptNote, paymentAmount);
+          };
+          return;
+        }
+        const loan = transactions.find(x => String(x.id) === String(id));
+        if (loan) await saveLoanSettlement(loan, false);
+      }
+      async function saveLoanSettlement(loan, isSettled, phone = "", whatsappTab = null, receiptNote = "", paymentAmount = 0) {
+        const previousRepaid = Number(loan.repaid_amount || (loan.is_settled ? loan.amount : 0));
+        const paidThisTime = isSettled ? Number(paymentAmount) : 0;
+        const totalRepaid = isSettled ? Math.min(Number(loan.amount), Math.round((previousRepaid + paidThisTime) * 100) / 100) : previousRepaid;
+        const remaining = Math.max(0, Math.round((Number(loan.amount) - totalRepaid) * 100) / 100);
+        const repaymentHistory = Array.isArray(loan.repayment_history) ? loan.repayment_history : [];
+        const updatedRepaymentHistory = isSettled
+          ? [...repaymentHistory, { amount: paidThisTime, paid_on: today(), receipt_note: receiptNote || null }]
+          : repaymentHistory;
+        if (isSettled && (paidThisTime <= 0 || paidThisTime > Number(loan.amount) - previousRepaid)) {
+          whatsappTab?.close();
+          toast("Rakam baaki udhaar se zyada nahi ho sakti");
+          return;
+        }
         const { data, error } = await supabase
           .from("transactions")
-          .update({ is_settled: isSettled, settled_on: isSettled ? today() : null })
-          .eq("id", id)
+          .update({
+            is_settled: isSettled ? remaining === 0 : false,
+            settled_on: isSettled && remaining === 0 ? today() : null,
+            repaid_amount: totalRepaid,
+            repayment_history: updatedRepaymentHistory,
+            ...(isSettled ? { last_repayment_amount: paidThisTime, last_repaid_on: today(), settlement_receipt_note: receiptNote || null } : {}),
+            ...(phone ? { whatsapp_phone: phone } : {}),
+          })
+          .eq("id", loan.id)
           .eq("user_id", user.id)
           .select()
           .single();
         if (error) {
-          toast(error.message.includes("settled") ? "Supabase mein loan-settlement-migration.sql run karein" : error.message);
+          whatsappTab?.close();
+          if (isSettled) closeModal();
+          toast(error.message.includes("whatsapp_phone") || error.message.includes("receipt_note") || error.message.includes("repaid_amount") || error.message.includes("last_repayment_amount") || error.message.includes("repayment_history")
+            ? "Supabase mein transaction-whatsapp-phone-migration.sql run karein"
+            : error.message.includes("settled")
+              ? "Supabase mein loan-settlement-migration.sql run karein"
+              : error.message);
           renderMoney();
           return;
         }
         transactionsError = null;
-        transactions = transactions.map(x => String(x.id) === String(id) ? data : x);
+        transactions = transactions.map(x => String(x.id) === String(loan.id) ? data : x);
+        if (phone && loan.person) {
+          const { error: syncError } = await supabase.from("transactions").update({ whatsapp_phone: phone }).eq("user_id", user.id).eq("person", loan.person);
+          if (!syncError) transactions = transactions.map(x => caseKey(x.person) === caseKey(loan.person) ? { ...x, whatsapp_phone: phone } : x);
+        }
+        syncPersonContacts();
         render();
         refreshSummaryIfReady();
-        toast(isSettled ? (data.kind === "lent" ? "Udhar wapas milna mark ho gaya ✓" : "Udhar wapas karna mark ho gaya ✓") : "Pending mark kar diya");
+        if (isSettled) {
+          closeModal();
+          const url = "https://wa.me/" + phone + "?text=" + encodeURIComponent(loanRepaymentReceipt(data, paidThisTime, totalRepaid, remaining, today(), data.settlement_receipt_note || ""));
+          if (whatsappTab) whatsappTab.location.href = url;
+          else window.open(url, "_blank");
+          toast(remaining > 0 ? money(remaining) + " abhi baaki · WhatsApp receipt ready hai" : "Udhaar poora chukta · WhatsApp receipt ready hai");
+        } else toast("Pending mark kar diya");
       }
       function updateRestTimerDisplay() {
         if (restTimerRunning && restTimerEndAt) {
@@ -1821,10 +1947,10 @@
         const monthWeightChange = latestMonthWeight && priorMonthWeight ? Number(latestMonthWeight.weight_kg) - Number(priorMonthWeight.weight_kg) : null;
         const sumKind = kind => monthTransactions.filter(x => x.kind === kind).reduce((sum, x) => sum + Number(x.amount || 0), 0);
         const expense = sumKind("expense"), income = sumKind("income"), lent = sumKind("lent"), repayment = sumKind("repayment"), borrowed = sumKind("borrowed");
-        const pendingLent = transactions.filter(x => x.kind === "lent" && !x.is_settled).reduce((a, x) => a + Number(x.amount), 0);
-        const pendingBorrowed = transactions.filter(x => x.kind === "borrowed" && !x.is_settled).reduce((a, x) => a + Number(x.amount), 0);
-        const lentReturnedInMonth = transactions.filter(x => x.kind === "lent" && x.is_settled && x.settled_on?.startsWith(summaryMonth)).reduce((a, x) => a + Number(x.amount), 0);
-        const borrowedRepaidInMonth = transactions.filter(x => x.kind === "borrowed" && x.is_settled && x.settled_on?.startsWith(summaryMonth)).reduce((a, x) => a + Number(x.amount), 0);
+        const pendingLent = transactions.filter(x => x.kind === "lent" && !x.is_settled).reduce((a, x) => a + loanRemaining(x), 0);
+        const pendingBorrowed = transactions.filter(x => x.kind === "borrowed" && !x.is_settled).reduce((a, x) => a + loanRemaining(x), 0);
+        const lentReturnedInMonth = transactions.filter(x => x.kind === "lent").flatMap(x => Array.isArray(x.repayment_history) ? x.repayment_history : []).filter(p => p.paid_on?.startsWith(summaryMonth)).reduce((a, p) => a + Number(p.amount || 0), 0);
+        const borrowedRepaidInMonth = transactions.filter(x => x.kind === "borrowed").flatMap(x => Array.isArray(x.repayment_history) ? x.repayment_history : []).filter(p => p.paid_on?.startsWith(summaryMonth)).reduce((a, p) => a + Number(p.amount || 0), 0);
         const daysCount = new Date(year, month, 0).getDate();
         const workoutDates = new Set(monthWorkouts.map(x => x.log_date));
         const mealDates = new Set(monthMeals.map(x => x.log_date));
@@ -1972,36 +2098,61 @@
             )
             .join(
               "",
-            )}</select></div><div class="field"><label>Amount (₹)</label><input class="input" id="txAmount" type="number" min="1" step="0.01" required placeholder="500"></div><div class="field"><label>Date</label><input class="input" id="txDate" type="date" value="${today()}" required></div><div class="field"><label>Title</label><input class="input" id="txTitle" required placeholder="Lunch, salary..."></div><div class="field"><label>Category</label><select class="input" id="txCategory"><option>Food</option><option>Travel</option><option>Gym</option><option>Shopping</option><option>Salary</option><option>Personal</option><option>Other</option></select></div><div class="field full"><label>Person (udhar ke liye)</label><input class="input" id="txPerson" placeholder="Naam (optional)"></div><div class="field full"><label>Note (optional)</label><input class="input" id="txNote" placeholder="Extra detail"></div></div><div class="modal-actions"><button type="button" class="btn subtle" id="cancelModal">Cancel</button><button class="btn" id="saveTxn">Save entry</button></div></form>`;
+            )}</select></div><div class="field"><label>Amount (₹)</label><input class="input" id="txAmount" type="number" min="1" step="0.01" required placeholder="500"></div><div class="field"><label>Date</label><input class="input" id="txDate" type="date" value="${today()}" required></div><div class="field"><label>Title</label><input class="input" id="txTitle" required placeholder="Lunch, salary..."></div><div class="field"><label>Category</label><select class="input" id="txCategory"><option>Food</option><option>Travel</option><option>Gym</option><option>Shopping</option><option>Salary</option><option>Personal</option><option>Other</option></select></div><div class="field full"><label>Person</label><input class="input" id="txPerson" list="savedPeople" placeholder="Naam (optional)"><datalist id="savedPeople">${personContacts.map(c => `<option value="${esc(c.person)}"></option>`).join("")}</datalist></div><div class="field full" id="txPhoneWrap" style="display:none"><label>WhatsApp number</label><input class="input" id="txPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="10 digit mobile number"><small id="txPhoneHelp">Naya number save hoga aur agli baar naam select karne par auto-fill hoga. Number yahan edit bhi kar sakte hain.</small></div><div class="field full" id="txReceiptNoteWrap" style="display:none"><label>Receipt par aapki baat (optional)</label><textarea class="input" id="txReceiptNote" placeholder="Jo dil se kehna ho, yahan likhein..."></textarea><small>Yeh message receipt mein alag, khaas row mein dikhega.</small></div><div class="field full"><label>Note (optional)</label><input class="input" id="txNote" placeholder="Extra detail"></div></div><div class="modal-actions"><button type="button" class="btn subtle" id="cancelModal">Cancel</button><button class="btn" id="saveTxn">Save entry</button></div></form>`;
         $("#modalBack").classList.add("open");
         const syncPersonField = () => {
-          const borrowed = $("#txKind").value === "borrowed";
-          $("#txPerson").required = borrowed;
+          const txKind = $("#txKind").value;
+          const borrowed = txKind === "borrowed";
+          const sendsReceipt = ["lent", "borrowed", "repayment"].includes(txKind);
+          $("#txPerson").required = borrowed || sendsReceipt;
+          $("#txPhoneWrap").style.display = sendsReceipt ? "block" : "none";
+          $("#txReceiptNoteWrap").style.display = sendsReceipt ? "block" : "none";
+          $("#txPhone").required = sendsReceipt;
           if (borrowed && !$("#txTitle").value) {
             $("#txTitle").value = "Udhar liya";
             $("#txCategory").value = "Personal";
           }
-          $("#txPerson").previousElementSibling.textContent = borrowed
-            ? "Kis person se udhar liya? *"
+          $("#txPerson").previousElementSibling.textContent = sendsReceipt
+            ? (borrowed ? "Kis person se udhar liya? *" : txKind === "lent" ? "Kise udhaar de rahe hain? *" : "Kise udhaar wapas kar rahe hain? *")
             : "Person (udhar ke liye)";
           $("#txPerson").placeholder = borrowed
             ? "Naam likhein"
-            : "Naam (optional)";
+          : sendsReceipt ? "Naam likhein" : "Naam (optional)";
         };
         $("#txKind").onchange = syncPersonField;
+        const fillSavedPhone = () => {
+          const match = personContacts.find(c => caseKey(c.person) === caseKey($("#txPerson").value));
+          if (match) {
+            $("#txPhone").value = match.phone;
+            $("#txPhoneHelp").textContent = "Saved number auto-filled. Zarurat ho to edit karein; naya number bhi save ho jayega.";
+          } else {
+            $("#txPhoneHelp").textContent = "Naya number save hoga aur agli baar naam select karne par auto-fill hoga. Number yahan edit bhi kar sakte hain.";
+          }
+        };
+        $("#txPerson").addEventListener("input", fillSavedPhone);
         syncPersonField();
         $("#cancelModal").onclick = closeModal;
         $("#txnForm").onsubmit = async (e) => {
           e.preventDefault();
+          const kind = $("#txKind").value;
+          const sendsReceipt = ["lent", "borrowed", "repayment"].includes(kind);
+          const phone = whatsappNumber($("#txPhone").value);
+          if (sendsReceipt && (phone.length < 10 || phone.length > 15)) {
+            toast("Sahi WhatsApp number daalein");
+            return;
+          }
+          const whatsappTab = sendsReceipt ? window.open("about:blank", "_blank") : null;
           let payload = {
             user_id: user.id,
-            kind: $("#txKind").value,
+            kind,
             amount: +$("#txAmount").value,
             occurred_on: $("#txDate").value,
             title: capitalizeWords($("#txTitle").value),
             category: capitalizeWords($("#txCategory").value),
             person: capitalizeWords($("#txPerson").value) || null,
             note: capitalizeWords($("#txNote").value) || null,
+            ...(sendsReceipt ? { whatsapp_phone: phone } : {}),
+            ...(sendsReceipt ? { receipt_note: $("#txReceiptNote").value.trim() || null } : {}),
           };
           $("#saveTxn").disabled = true;
           let { data, error } = await supabase
@@ -2010,16 +2161,27 @@
             .select()
             .single();
           if (error) {
+            whatsappTab?.close();
             $("#saveTxn").disabled = false;
-            toast(error.message);
+            toast(error.message.includes("whatsapp_phone") || error.message.includes("receipt_note") ? "Receipt fields ke liye transaction-whatsapp-phone-migration.sql run karein" : error.message);
             return;
+          }
+          if (sendsReceipt) {
+            await supabase.from("transactions").update({ whatsapp_phone: phone }).eq("user_id", user.id).eq("person", payload.person);
           }
           transactionsError = null;
           transactions.unshift(data);
+          syncPersonContacts();
           closeModal();
           render();
           refreshSummaryIfReady();
-          toast("Entry save ho gayi ✓");
+          if (sendsReceipt) {
+            const message = loanReceiptMessage({ ...payload, person: payload.person });
+            const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+            if (whatsappTab) whatsappTab.location.href = url;
+            else window.location.href = url;
+            toast("Entry save ho gayi · WhatsApp receipt ready hai");
+          } else toast("Entry save ho gayi ✓");
         };
       }
       function closeModal() {
