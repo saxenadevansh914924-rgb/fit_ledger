@@ -46,6 +46,21 @@
         grid-template-columns: 244px minmax(0, 1fr);
         min-height: 100vh;
       }
+      .mobile-menu-toggle {
+        display: none;
+        flex: 0 0 42px;
+        width: 42px;
+        height: 42px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--paper);
+        color: var(--deep);
+        font-size: 22px;
+        line-height: 1;
+      }
+      .nav-backdrop {
+        display: none;
+      }
       .side {
         background: var(--deep);
         color: #fff;
@@ -132,6 +147,20 @@
         gap: 10px;
         align-items: center;
       }
+      .profile-trigger {
+        flex:1;
+        min-width:0;
+        display:flex;
+        align-items:center;
+        gap:10px;
+        padding:0;
+        border:0;
+        background:none;
+        color:inherit;
+        text-align:left;
+        cursor:pointer;
+      }
+      .profile-trigger:hover { opacity:.85; }
       .avatar {
         width: 34px;
         height: 34px;
@@ -146,6 +175,7 @@
         min-width: 0;
         flex: 1;
       }
+      .profile-trigger div:nth-child(2) { min-width:0; flex:1; }
       .userbox b {
         font-size: 12px;
         display: block;
@@ -933,6 +963,40 @@
         line-height: 1.5;
         margin-bottom: 15px;
       }
+      .profile-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+      .profile-fields .field input { width:100%; }
+      .profile-fields .field.full { grid-column:1/-1; }
+      @media (max-width:520px) { .profile-fields { grid-template-columns:1fr; } .profile-fields .field.full { grid-column:auto; } }
+      .goal-layout { display:grid; grid-template-columns:minmax(260px,.8fr) minmax(0,1.6fr); gap:15px; align-items:start; }
+      .goal-form { display:grid; gap:11px; }
+      .goal-form .field input, .goal-form .field select, .goal-form .field textarea { width:100%; }
+      .goal-form textarea { min-height:75px; }
+      .goal-list { display:grid; gap:12px; }
+      .goal-card { padding:17px; }
+      .goal-card-head { display:flex; justify-content:space-between; gap:12px; align-items:start; }
+      .goal-card h3 { margin:0 0 5px; font:800 15px Manrope; }
+      .goal-card p { margin:0; color:var(--muted); font-size:11px; line-height:1.5; }
+      .goal-labels { display:flex; flex-wrap:wrap; gap:5px; margin:4px 0 7px; }
+      .goal-cadence.daily { background:#eaf2ff; color:#4269a3; }
+      .goal-cadence.weekly { background:#f0eaff; color:#7654a2; }
+      .goal-cadence.monthly { background:#e5f5f0; color:#3c806c; }
+      .goal-cadence.yearly { background:#fff0e4; color:#a66735; }
+      .goal-cadence.once { background:#edf0f1; color:#5c6870; }
+      .goal-status.success { background:#edf7e5; color:#4e7b32; }
+      .goal-status.progress { background:#fff6df; color:#947124; }
+      .goal-progress-line { display:flex; justify-content:space-between; gap:10px; align-items:center; margin:16px 0 8px; font-size:11px; }
+      .goal-progress-track { height:9px; border-radius:8px; background:#edf0e9; overflow:hidden; }
+      .goal-progress-fill { height:100%; border-radius:inherit; background:#91bd4e; }
+      .goal-controls { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:12px; }
+      .goal-progress-actions { display:flex; align-items:center; gap:7px; }
+      .goal-step { width:36px; height:36px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--deep); font-size:18px; font-weight:800; }
+      .goal-remove { border:0; background:none; color:#b2604d; font-size:11px; font-weight:700; }
+      .goal-history { display:flex; flex-wrap:wrap; gap:6px; margin-top:14px; }
+      .goal-history .tag { display:inline-flex; gap:4px; align-items:center; }
+      .goal-history .tag.success { background:#edf7e5; color:#4e7b32; }
+      .goal-history .tag.failed { background:#fff0ec; color:#ad5847; }
+      .goal-history .tag.current { background:#fff6df; color:#947124; }
+      @media(max-width:760px) { .goal-layout { grid-template-columns:1fr; } }
       @media (max-width: 1050px) {
         .stats {
           grid-template-columns: repeat(2, 1fr);
@@ -941,47 +1005,41 @@
           grid-template-columns: repeat(2, 1fr);
         }
       }
-      @media (max-width: 760px) {
+      @media (max-width: 1050px) {
         .app {
           display: block;
-          padding-bottom: 65px;
         }
         .side {
-          height: auto;
+          width: min(300px, 86vw);
+          height: 100dvh;
           position: fixed;
-          top: auto;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          z-index: 8;
-          padding: 7px 8px;
-          background: #14231af2;
-          backdrop-filter: blur(14px);
+          inset: 0 auto 0 0;
+          z-index: 30;
+          padding: 24px 18px;
+          transform: translateX(-105%);
+          transition: transform .22s ease;
+          overflow-y: auto;
+          box-shadow: 12px 0 40px #0002;
         }
-        .brand,
-        .nav-label,
-        .side-bottom {
-          display: none;
+        .side.open {
+          transform: translateX(0);
         }
-        .nav {
-          display:flex;
-          overflow-x:auto;
-          gap: 2px;
-          scrollbar-width:none;
+        .nav-backdrop.visible {
+          display: block;
+          position: fixed;
+          inset: 0;
+          z-index: 29;
+          border: 0;
+          background: #10171380;
         }
-        .nav button {
-          flex:0 0 58px;
-          padding: 7px 3px;
-          justify-content: center;
-          flex-direction: column;
-          gap: 3px;
-          font-size: 8px;
+        .mobile-menu-toggle {
+          display: inline-grid;
+          place-items: center;
         }
-        .nav button span {
-          font-size: 16px;
-        }
-        .nav button.active {
-          box-shadow: inset 0 -2px var(--lime);
+        .topline > div:first-of-type {
+          display: flex;
+          align-items: center;
+          gap: 12px;
         }
         .main {
           padding: 20px 15px 35px;
@@ -1105,6 +1163,12 @@
       const $ = (s) => document.querySelector(s);
       const caseKey = (value) => String(value ?? "").trim().toLocaleLowerCase("en-IN");
       const capitalizeWords = (value) => String(value ?? "").trim().toLocaleLowerCase("en-IN").replace(/(^|\s)(\p{L})/gu, (_, space, letter) => space + letter.toLocaleUpperCase("en-IN"));
+      let profileData = null, profileTableError = null;
+      const profileDisplayName = () => {
+        const metadata = user?.user_metadata || {};
+        const name = profileData?.full_name || metadata.full_name || metadata.name || metadata.display_name || profileData?.username || metadata.username || user?.email?.split("@")[0] || "Account holder";
+        return capitalizeWords(String(name).replace(/[_.-]+/g, " "));
+      };
       const today = () => {
         const d = new Date();
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -1117,6 +1181,9 @@
         workoutHistory = [],
         weightLogs = [],
         weightLogError = null,
+        goals = [],
+        goalProgress = [],
+        goalTrackerError = null,
         meals = [],
         mealHistory = [],
         weeklyVariations = [],
@@ -1319,16 +1386,18 @@
           ? new Date(Date.UTC(year, month - 1, day)).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric", timeZone: "UTC" })
           : String(receiptDate || "Date not set");
         const value = money(amount);
+        const ownerName = profileDisplayName();
         const purpose = note || title;
         const header = `╭────────── FITLEDGER ──────────╮\n          PAYMENT RECEIPT\n╰───────────────────────────────╯`;
         const amountLine = `💰  Rakam        ${value}`;
         const dateLine = `📅  Tareekh      ${dateLabel}`;
         const personalLine = receipt_note?.trim() ? `\n\n💌  Aapki baat\n╭───────────────────────────────╮\n${receipt_note.trim()}\n╰───────────────────────────────╯` : "";
-        if (kind === "lent") return `${header}\n\nNamaste ${person} ji,\n\nDevansh ne aapko udhaar diya.\n\n${amountLine}\n📝  Kis liye      ${purpose || "Udhaar"}\n${dateLine}${personalLine}\n\nYeh digital receipt aapke record ke liye hai.\n— Devansh`;
-        if (kind === "borrowed") return `${header}\n\nNamaste ${person} ji,\n\nDevansh ne aapse udhaar liya.\n\n${amountLine}\n📝  Kis liye      ${purpose || "Udhaar"}\n${dateLine}${personalLine}\n\nYeh digital receipt aapke record ke liye hai.\n— Devansh`;
-        return `${header}\n\nNamaste ${person} ji,\n\nDevansh ne udhaar ki rakam wapas ki.\n\n${amountLine}\n📝  Vivaran       ${purpose || "Udhaar wapsi"}\n${dateLine}${personalLine}\n\nYeh digital receipt aapke record ke liye hai.\n— Devansh`;
+        if (kind === "lent") return `${header}\n\nNamaste ${person} ji,\n\n${ownerName} ne aapko udhaar diya.\n\n${amountLine}\n📝  Kis liye      ${purpose || "Udhaar"}\n${dateLine}${personalLine}\n\nYeh digital receipt aapke record ke liye hai.\n— ${ownerName}`;
+        if (kind === "borrowed") return `${header}\n\nNamaste ${person} ji,\n\n${ownerName} ne aapse udhaar liya.\n\n${amountLine}\n📝  Kis liye      ${purpose || "Udhaar"}\n${dateLine}${personalLine}\n\nYeh digital receipt aapke record ke liye hai.\n— ${ownerName}`;
+        return `${header}\n\nNamaste ${person} ji,\n\n${ownerName} ne udhaar ki rakam wapas ki.\n\n${amountLine}\n📝  Vivaran       ${purpose || "Udhaar wapsi"}\n${dateLine}${personalLine}\n\nYeh digital receipt aapke record ke liye hai.\n— ${ownerName}`;
       }
       function loanRepaymentReceipt(loan, paymentAmount, totalRepaid, remaining, paidOn, receiptNote = "") {
+        const ownerName = profileDisplayName();
         const formatDate = (value) => {
           const [year, month, day] = String(value || "").split("-").map(Number);
           return year && month && day
@@ -1341,12 +1410,12 @@
         const personalLine = receiptNote.trim() ? `\n\n💌  Aapki baat\n╭───────────────────────────────╮\n${receiptNote.trim()}\n╰───────────────────────────────╯` : "";
         const completionLine = remaining > 0
           ? loan.kind === "borrowed"
-            ? `${money(remaining)} ki shesh rakam baaki hai. Devansh ise baad mein ada karega.`
+            ? `${money(remaining)} ki shesh rakam baaki hai. ${ownerName} ise baad mein ada karega.`
             : `${money(remaining)} ki shesh rakam baaki hai. Aap ise baad mein ada karenge.`
           : "Udhaar poori tarah chukta ho gaya hai. Dhanyavaad.";
         const paymentType = remaining > 0 ? "anshik bhugtan" : "antim bhugtan";
-        if (loan.kind === "lent") return `${header}\n\nNamaste ${loan.person} ji,\n\nAapne Devansh se ${money(loan.amount)} udhaar liya tha. Aaj ${formatDate(paidOn)} ko aapki taraf se ${money(paymentAmount)} ka ${paymentType} Devansh ko prapt hua hai.\n\n${details}${personalLine}\n\n${completionLine}\n— Devansh`;
-        return `${header}\n\nNamaste ${loan.person} ji,\n\nDevansh ne aapse ${money(loan.amount)} udhaar liya tha. Aaj ${formatDate(paidOn)} ko Devansh ki taraf se ${money(paymentAmount)} ka ${paymentType} aapko kiya gaya hai.\n\n${details}${personalLine}\n\n${completionLine}\n— Devansh`;
+        if (loan.kind === "lent") return `${header}\n\nNamaste ${loan.person} ji,\n\nAapne ${ownerName} se ${money(loan.amount)} udhaar liya tha. Aaj ${formatDate(paidOn)} ko aapki taraf se ${money(paymentAmount)} ka ${paymentType} ${ownerName} ko prapt hua hai.\n\n${details}${personalLine}\n\n${completionLine}\n— ${ownerName}`;
+        return `${header}\n\nNamaste ${loan.person} ji,\n\n${ownerName} ne aapse ${money(loan.amount)} udhaar liya tha. Aaj ${formatDate(paidOn)} ko ${ownerName} ki taraf se ${money(paymentAmount)} ka ${paymentType} aapko kiya gaya hai.\n\n${details}${personalLine}\n\n${completionLine}\n— ${ownerName}`;
       }
       function loanStatusText(t) {
         if (t.kind !== "lent" && t.kind !== "borrowed") return "—";
@@ -1441,15 +1510,53 @@
       }
       function shell() {
         const username = user.user_metadata?.username || (user.email || "user").split("@")[0];
-        document.body.innerHTML = `<div class="app"><aside class="side"><div class="brand"><div class="brand-mark">✳</div><div>fitledger<small>TRAIN WELL. SPEND WISE.</small></div></div><div><div class="nav-label">WORKSPACE</div><nav class="nav"><button data-page="home" class="active"><span>⌂</span>Overview</button><button data-page="money"><span>↗</span>Money</button><button data-page="workout"><span>◉</span>Workout</button><button data-page="diet"><span>♡</span>Diet plan</button><button data-page="history"><span>▤</span>History</button><button data-page="summary"><span>▥</span>Summary</button><button data-page="weight"><span>⚖</span>Weight</button></nav></div><div class="side-bottom"><div class="userbox"><div class="avatar">${esc(username[0].toUpperCase())}</div><div><b>${esc(username)}</b><small>Personal account</small></div><button class="logout" id="logout" title="Logout">↪</button></div></div></aside><main class="main"><div class="topline"><div><div class="eyebrow">YOUR PERSONAL DASHBOARD</div><h1 id="pageTitle">Overview</h1></div><div class="date-chip">◷ &nbsp;${new Date().toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}</div></div><section class="page active" id="page-home"></section><section class="page" id="page-money"></section><section class="page" id="page-workout"></section><section class="page" id="page-diet"></section><section class="page" id="page-history"></section><section class="page" id="page-summary"></section><section class="page" id="page-weight"></section></main></div><div class="toast" id="toast"></div><div class="modal-back" id="modalBack"><div class="modal" id="modal"></div></div>`;
+        document.body.innerHTML = `<div class="app"><aside class="side" id="sideNav"><div class="brand"><div class="brand-mark">✳</div><div>fitledger<small>TRAIN WELL. SPEND WISE.</small></div></div><div><div class="nav-label">WORKSPACE</div><nav class="nav"><button data-page="home" class="active"><span>⌂</span>Overview</button><button data-page="money"><span>↗</span>Money</button><button data-page="workout"><span>◉</span>Workout</button><button data-page="diet"><span>♡</span>Diet plan</button><button data-page="history"><span>▤</span>History</button><button data-page="summary"><span>▥</span>Summary</button><button data-page="weight"><span>⚖</span>Weight</button></nav></div><div class="side-bottom"><div class="userbox"><div class="avatar">${esc(username[0].toUpperCase())}</div><div><b>${esc(username)}</b><small>Personal account</small></div><button class="logout" id="logout" title="Logout">↪</button></div></div></aside><button class="nav-backdrop" id="navBackdrop" aria-label="Close navigation"></button><main class="main"><div class="topline"><div><button class="mobile-menu-toggle" id="menuToggle" aria-label="Open navigation" aria-expanded="false">☰</button><div><div class="eyebrow">YOUR PERSONAL DASHBOARD</div><h1 id="pageTitle">Overview</h1></div></div><div class="date-chip">◷ &nbsp;${new Date().toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}</div></div><section class="page active" id="page-home"></section><section class="page" id="page-money"></section><section class="page" id="page-workout"></section><section class="page" id="page-diet"></section><section class="page" id="page-history"></section><section class="page" id="page-summary"></section><section class="page" id="page-weight"></section></main></div><div class="toast" id="toast"></div><div class="modal-back" id="modalBack"><div class="modal" id="modal"></div></div>`;
+        const profileNav = document.createElement("button");
+        profileNav.dataset.page = "profile";
+        profileNav.innerHTML = "<span>♙</span>Profile";
+        $("#page-weight").insertAdjacentHTML("afterend", '<section class="page" id="page-profile"></section>');
+        const goalsNav = document.createElement("button");
+        goalsNav.dataset.page = "goals";
+        goalsNav.innerHTML = "<span>✓</span>My goals";
+        $(".nav").append(goalsNav);
+        $(".nav").append(profileNav);
+        $("#page-profile").insertAdjacentHTML("afterend", '<section class="page" id="page-goals"></section>');
+        const accountBox = $(".userbox");
+        const accountDetails = document.createElement("button");
+        accountDetails.type = "button";
+        accountDetails.className = "profile-trigger";
+        accountDetails.setAttribute("aria-label", "Open profile");
+        while (accountBox.firstElementChild && accountBox.firstElementChild.id !== "logout") {
+          accountDetails.append(accountBox.firstElementChild);
+        }
+        accountBox.prepend(accountDetails);
+        $(".userbox b").textContent = profileDisplayName();
+        $(".avatar").textContent = profileDisplayName().charAt(0).toLocaleUpperCase("en-IN");
+        const sideNav = $("#sideNav");
+        const menuToggle = $("#menuToggle");
+        const navBackdrop = $("#navBackdrop");
+        const closeNav = () => {
+          sideNav.classList.remove("open");
+          navBackdrop.classList.remove("visible");
+          menuToggle.setAttribute("aria-expanded", "false");
+        };
+        menuToggle.onclick = () => {
+          const open = sideNav.classList.toggle("open");
+          navBackdrop.classList.toggle("visible", open);
+          menuToggle.setAttribute("aria-expanded", String(open));
+        };
+        navBackdrop.onclick = closeNav;
         document
           .querySelectorAll(".nav button")
-          .forEach((b) => (b.onclick = () => showPage(b.dataset.page)));
-        $("#logout").onclick = async () => {
+          .forEach((b) => (b.onclick = () => { showPage(b.dataset.page); closeNav(); }));
+        accountDetails.onclick = () => { showPage("profile"); closeNav(); };
+        $("#logout").onclick = async (event) => {
+          event.stopPropagation();
           await supabase.auth.signOut();
           user = null;
           authScreen();
         };
+        document.onkeydown = (event) => { if (event.key === "Escape") closeNav(); };
       }
       function showPage(p) {
         page = p;
@@ -1467,6 +1574,8 @@
           history: "Your history",
           summary: "Monthly summary",
           weight: "Weight gain progress",
+          profile: "Your profile",
+          goals: "My goals",
         }[p];
         render();
       }
@@ -1544,9 +1653,229 @@
         if (page === "history") renderHistory();
         if (page === "summary") renderSummary();
         if (page === "weight") renderWeight();
+        if (page === "profile") renderProfile();
+        if (page === "goals") renderGoals();
       }
       function refreshSummaryIfReady() {
         if ($("#page-summary")) renderSummary();
+      }
+      function renderProfile() {
+        const metadata = user?.user_metadata || {};
+        const savedProfile = profileData || metadata;
+        const setupNotice = profileTableError ? `<div class="notice"><b>Profiles table setup nahi hua.</b> Supabase SQL Editor mein <code>profile-table-migration.sql</code> run karein, phir page reload karein. <small>${esc(profileTableError.message || "")}</small></div>` : "";
+        $("#page-profile").innerHTML = `${setupNotice}<div class="sectionhead"><div><h2>Aapki profile</h2><p>Yahan di hui details Supabase ke <code>public.profiles</code> table mein aapke account ke saath save hongi.</p></div></div><div class="card"><form id="profileForm"><div class="profile-fields"><div class="field"><label>Naam</label><input class="input" id="profileName" type="text" maxlength="80" value="${esc(savedProfile.full_name || savedProfile.name || savedProfile.display_name || "")}" placeholder="Apna naam likhein" required></div><div class="field"><label>Username</label><input class="input" type="text" value="${esc(savedProfile.username || metadata.username || (user.email || "").split("@")[0])}" readonly><small>Login ke liye isi username ka istemal hota hai.</small></div><div class="field"><label>Hobby</label><input class="input" id="profileHobby" type="text" maxlength="120" value="${esc(savedProfile.hobby || "")}" placeholder="Jaise gym, cricket, music"></div><div class="field"><label>Occupation</label><input class="input" id="profileOccupation" type="text" maxlength="100" value="${esc(savedProfile.occupation || "")}" placeholder="Jaise student, trainer"></div><div class="field"><label>Mobile number</label><input class="input" id="profilePhone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" value="${esc(savedProfile.mobile_number || "")}" placeholder="Mobile number"></div><div class="field"><label>Contact email ID</label><input class="input" id="profileEmail" type="email" autocomplete="email" maxlength="254" value="${esc(savedProfile.contact_email || "")}" placeholder="name@example.com"><small>Yeh contact detail hai; login username/email nahi badlega.</small></div></div><div style="display:flex;justify-content:flex-end;margin-top:18px"><button class="btn" id="saveProfile">Profile save karein</button></div></form></div>`;
+        $("#profileForm").onsubmit = async (event) => {
+          event.preventDefault();
+          const saveButton = $("#saveProfile");
+          saveButton.disabled = true;
+          const updatedMetadata = {
+            ...metadata,
+            full_name: capitalizeWords($("#profileName").value),
+            username: metadata.username || profileData?.username || (user.email || "").split("@")[0],
+            hobby: $("#profileHobby").value.trim(),
+            occupation: $("#profileOccupation").value.trim(),
+            mobile_number: $("#profilePhone").value.trim(),
+            contact_email: $("#profileEmail").value.trim(),
+          };
+          const profilePayload = {
+            user_id: user.id,
+            username: updatedMetadata.username,
+            full_name: updatedMetadata.full_name,
+            hobby: updatedMetadata.hobby || null,
+            occupation: updatedMetadata.occupation || null,
+            mobile_number: updatedMetadata.mobile_number || null,
+            contact_email: updatedMetadata.contact_email || null,
+            updated_at: new Date().toISOString(),
+          };
+          const { data: savedRow, error: profileError } = await supabase.from("profiles").upsert(profilePayload, { onConflict: "user_id" }).select().single();
+          saveButton.disabled = false;
+          if (profileError) {
+            profileTableError = profileError;
+            renderProfile();
+            return toast(profileError.message.includes("profiles") || profileError.message.includes("schema cache") ? "Pehle Supabase mein profile-table-migration.sql run karein" : profileError.message || "Profile save nahi ho payi");
+          }
+          profileTableError = null;
+          profileData = savedRow;
+          const { data: authData, error: metadataError } = await supabase.auth.updateUser({ data: updatedMetadata });
+          if (authData?.user) user = authData.user;
+          $(".userbox b").textContent = profileDisplayName();
+          $(".avatar").textContent = profileDisplayName().charAt(0).toLocaleUpperCase("en-IN");
+          toast(metadataError ? "Profile table mein save hui; account metadata update nahi hua" : "Profile save ho gayi ✓");
+          renderProfile();
+        };
+      }
+      async function loadProfileData() {
+        profileData = null;
+        profileTableError = null;
+        const { data, error } = await supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle();
+        if (error) {
+          profileTableError = error;
+          return;
+        }
+        if (data) {
+          profileData = data;
+        } else {
+          const metadata = user.user_metadata || {};
+          const username = metadata.username || (user.email || "").split("@")[0];
+          const { data: created, error: createError } = await supabase.from("profiles").upsert({
+            user_id: user.id,
+            username,
+            full_name: metadata.full_name || metadata.name || metadata.display_name || null,
+            hobby: metadata.hobby || null,
+            occupation: metadata.occupation || null,
+            mobile_number: metadata.mobile_number || null,
+            contact_email: metadata.contact_email || null,
+          }, { onConflict: "user_id" }).select().single();
+          profileTableError = createError;
+          if (!createError) profileData = created;
+        }
+        if ($(".profile-trigger")) {
+          $(".profile-trigger b").textContent = profileDisplayName();
+          $(".avatar").textContent = profileDisplayName().charAt(0).toLocaleUpperCase("en-IN");
+        }
+      }
+      async function loadGoalData() {
+        goals = [];
+        goalProgress = [];
+        goalTrackerError = null;
+        const [goalResult, progressResult] = await Promise.all([
+          supabase.from("goals").select("*").order("created_at", { ascending: false }),
+          supabase.from("goal_progress").select("*").order("period_key", { ascending: false }),
+        ]);
+        goalTrackerError = goalResult.error || progressResult.error || null;
+        if (!goalResult.error) goals = goalResult.data || [];
+        if (!progressResult.error) goalProgress = progressResult.data || [];
+      }
+      function goalPeriodStart(cadence, date = new Date()) {
+        if (cadence === "once") return "2000-01-01";
+        const value = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12);
+        if (cadence === "daily") return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
+        if (cadence === "weekly") value.setDate(value.getDate() - ((value.getDay() + 6) % 7));
+        if (cadence === "monthly") value.setDate(1);
+        if (cadence === "yearly") value.setMonth(0, 1);
+        return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
+      }
+      function goalPeriodAtOffset(cadence, offset) {
+        const now = new Date();
+        if (cadence === "once") return "2000-01-01";
+        if (cadence === "daily") now.setDate(now.getDate() - offset);
+        if (cadence === "weekly") now.setDate(now.getDate() - offset * 7);
+        if (cadence === "monthly") return goalPeriodStart(cadence, new Date(now.getFullYear(), now.getMonth() - offset, 1, 12));
+        if (cadence === "yearly") return goalPeriodStart(cadence, new Date(now.getFullYear() - offset, 0, 1, 12));
+        return goalPeriodStart(cadence, now);
+      }
+      function goalPeriodLabel(cadence, key) {
+        if (cadence === "once") return "Only once";
+        const start = new Date(`${key}T12:00:00`);
+        if (cadence === "yearly") return String(start.getFullYear());
+        if (cadence === "monthly") return start.toLocaleDateString("en-IN", { month: "short", year: "numeric" });
+        if (cadence === "daily") return start.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+        const end = new Date(`${shiftDate(key, 6)}T12:00:00`);
+        const dayMonth = { day: "numeric", month: "short" };
+        return `${start.toLocaleDateString("en-IN", dayMonth)}–${end.toLocaleDateString("en-IN", { ...dayMonth, year: "numeric" })}`;
+      }
+      function goalProgressFor(goal, periodKey) {
+        return Number(goalProgress.find(row => row.goal_id === goal.id && row.period_key === periodKey)?.completed_count || 0);
+      }
+      function detectGoalTarget(title, details) {
+        const match = `${title || ""} ${details || ""}`.match(/\d+/);
+        return Math.max(1, Math.min(100000, Number(match?.[0] || 1)));
+      }
+      function goalSetupMessage(error) {
+        const message = error?.message || "";
+        return /goals|goal_progress|schema cache|does not exist/i.test(message)
+          ? "Goal tables missing hain. Supabase SQL Editor mein goal-tracker-migration.sql run karein."
+          : message || "Goal data load nahi hua.";
+      }
+      function renderGoals() {
+        const cadenceInfo = [
+          ["daily", "Daily"],
+          ["weekly", "Weekly"],
+          ["monthly", "Monthly"],
+          ["yearly", "Yearly"],
+          ["once", "Only once"],
+        ];
+        const setupNotice = goalTrackerError ? `<div class="notice"><b>Goal data abhi connect nahi hua.</b> ${esc(goalSetupMessage(goalTrackerError))}</div>` : "";
+        const cards = goals.map(goal => {
+          const currentKey = goalPeriodAtOffset(goal.cadence, 0);
+          const target = Number(goal.target_count);
+          const current = goalProgressFor(goal, currentKey);
+          const percent = Math.min(100, Math.round(current / target * 100));
+          const achieved = current >= target;
+          const cadenceLabel = cadenceInfo.find(item => item[0] === goal.cadence)?.[1] || goal.cadence;
+          const createdKey = goal.cadence === "once" ? currentKey : goalPeriodStart(goal.cadence, new Date(goal.created_at));
+          const history = Array.from({ length: goal.cadence === "once" ? 1 : 5 }, (_, offset) => {
+            const key = goalPeriodAtOffset(goal.cadence, offset);
+            if (key < createdKey) return "";
+            const count = goalProgressFor(goal, key);
+            const success = count >= target;
+            const isCurrent = offset === 0;
+            const statusClass = isCurrent ? "current" : success ? "success" : "failed";
+            const statusIcon = isCurrent ? (success ? "✓" : "…") : success ? "✓" : "✕";
+            const statusText = isCurrent ? (success ? "Success" : "In progress") : success ? "Success" : "Failure";
+            return `<span class="tag ${statusClass}" title="${count}/${target} ${esc(goal.unit || "complete")}">${statusIcon} ${goalPeriodLabel(goal.cadence, key)} · ${statusText}</span>`;
+          }).filter(Boolean).join("");
+          return `<article class="card goal-card"><div class="goal-card-head"><div><h3>${esc(goal.title)}</h3><div class="goal-labels"><span class="tag goal-cadence ${esc(goal.cadence)}">${esc(cadenceLabel)}</span><span class="tag">${esc(goalPeriodLabel(goal.cadence, currentKey))}</span></div>${goal.details ? `<p>${esc(goal.details)}</p>` : ""}</div><span class="tag goal-status ${achieved ? "success" : "progress"}">${achieved ? "Success ✓" : "In progress"}</span></div><div class="goal-progress-line"><b>${current} / ${target} ${esc(goal.unit || "times")}</b><span>${percent}%</span></div><div class="goal-progress-track"><div class="goal-progress-fill" style="width:${percent}%"></div></div><div class="goal-controls"><small>${achieved ? "Is period ka target poora ho gaya!" : `${target - current} ${goal.unit || "times"} aur mark karein`}</small><div class="goal-progress-actions"><button class="goal-step" type="button" data-goal-action="down" data-goal-id="${esc(goal.id)}" aria-label="Progress kam karein">−</button><button class="btn" type="button" data-goal-action="up" data-goal-id="${esc(goal.id)}">+1 Mark</button></div></div><div class="goal-history">${history}</div><div style="text-align:right;margin-top:10px"><button class="goal-remove" type="button" data-goal-action="delete" data-goal-id="${esc(goal.id)}">Goal delete karein</button></div></article>`;
+        }).join("");
+        $("#page-goals").innerHTML = `${setupNotice}<div class="sectionhead"><div><h2>Apne targets set karein</h2><p>Har target ka progress mark karein aur current/pichhle periods ka result dekhein.</p></div></div><div class="goal-layout"><div class="card"><div class="card-title"><h3>Naya target</h3><small>Ek target add karein</small></div><form id="goalForm" class="goal-form"><div class="field"><label>Target ka naam</label><input class="input" id="goalTitle" maxlength="120" placeholder="Jaise haftay mein 3 workouts" required></div><div class="field"><label>Chhoti detail (optional)</label><textarea class="input" id="goalDetails" maxlength="300" placeholder="Kya achieve karna hai?"></textarea></div><div class="field"><label>Period</label><select class="input" id="goalCadence"><option value="daily">Daily · har din</option><option value="weekly">Weekly · har hafta</option><option value="monthly">Monthly · har mahina</option><option value="yearly">Yearly · har saal</option><option value="once">Only once · ek baar</option></select></div><div class="field"><label>Count kis cheez ka? (optional)</label><input class="input" id="goalUnit" maxlength="30" placeholder="workouts, books, km"></div><small id="goalTargetPreview" style="color:var(--muted)"></small><small style="color:var(--muted)">Target number naam ya detail se automatic liya jayega; number na ho to 1 rahega.</small><button class="btn" id="saveGoal">Target add karein</button></form></div><div class="goal-list">${cards || `<div class="card empty"><strong>Abhi koi target nahi</strong>Ek target add karke progress shuru karein.</div>`}</div></div>`;
+        const updateGoalTargetPreview = () => {
+          const detected = detectGoalTarget($("#goalTitle").value, $("#goalDetails").value);
+          $("#goalTargetPreview").textContent = `Auto target: ${detected} ${$("#goalUnit").value.trim() || "times"}`;
+        };
+        ["#goalTitle", "#goalDetails", "#goalUnit"].forEach(selector => $(selector).addEventListener("input", updateGoalTargetPreview));
+        updateGoalTargetPreview();
+        $("#goalForm").onsubmit = async event => {
+          event.preventDefault();
+          const button = $("#saveGoal");
+          button.disabled = true;
+          const payload = {
+            user_id: user.id,
+            title: $("#goalTitle").value.trim(),
+            details: $("#goalDetails").value.trim() || null,
+            cadence: $("#goalCadence").value,
+            target_count: detectGoalTarget($("#goalTitle").value, $("#goalDetails").value),
+            unit: $("#goalUnit").value.trim() || null,
+          };
+          const { data, error } = await supabase.from("goals").insert(payload).select().single();
+          button.disabled = false;
+          if (error) { goalTrackerError = error; renderGoals(); return toast(goalSetupMessage(error)); }
+          goalTrackerError = null;
+          goals.unshift(data);
+          renderGoals();
+          toast("Naya target add ho gaya ✓");
+        };
+        document.querySelectorAll("[data-goal-action]").forEach(button => {
+          button.onclick = async () => {
+            const goalId = button.dataset.goalId;
+            const action = button.dataset.goalAction;
+            const goal = goals.find(item => item.id === goalId);
+            if (!goal) return;
+            if (action === "delete") {
+              if (!window.confirm(`“${goal.title}” target aur uski history delete karein?`)) return;
+              const { error } = await supabase.from("goals").delete().eq("id", goalId).eq("user_id", user.id);
+              if (error) return toast(error.message || "Target delete nahi hua");
+              goals = goals.filter(item => item.id !== goalId);
+              goalProgress = goalProgress.filter(item => item.goal_id !== goalId);
+              renderGoals();
+              toast("Target delete ho gaya");
+              return;
+            }
+            const periodKey = goalPeriodAtOffset(goal.cadence, 0);
+            const oldCount = goalProgressFor(goal, periodKey);
+            const completedCount = Math.max(0, oldCount + (action === "up" ? 1 : -1));
+            const { data, error } = await supabase.from("goal_progress").upsert({
+              goal_id: goal.id,
+              user_id: user.id,
+              period_key: periodKey,
+              completed_count: completedCount,
+              updated_at: new Date().toISOString(),
+            }, { onConflict: "goal_id,period_key" }).select().single();
+            if (error) { goalTrackerError = error; return toast(goalSetupMessage(error)); }
+            goalTrackerError = null;
+            goalProgress = [...goalProgress.filter(item => !(item.goal_id === goal.id && item.period_key === periodKey)), data];
+            renderGoals();
+          };
+        });
       }
       function renderHome() {
         const todayWorkoutOverride = planOverrides.find(x => x.plan_type === "workout" && x.target_date === today());
@@ -2202,6 +2531,8 @@
       });
       async function boot() {
         shell();
+        await loadProfileData();
+        await loadGoalData();
         await loadData();
         render();
         if (referenceDataError) {

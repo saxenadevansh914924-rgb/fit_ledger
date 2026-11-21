@@ -6,6 +6,8 @@ A responsive gym, diet, and personal money tracker built as a single-page site i
 
 1. Open the Supabase project at `https://koiwocybjmrvrxopvckd.supabase.co`.
 2. In **SQL Editor**, run the full contents of [`supabase-setup.sql`](supabase-setup.sql). It creates ten tables, adds user-scoped RLS policies, and seeds the 7-day workout, diet profile, daily meal schedule, and weekly meal variations. Workout and diet pages fetch this content from Supabase after login. Money entries, workout/meal check-ins, and personal plan edits are stored per user.
+   To show each account as a row in **Table Editor → profiles** and store editable name, hobby, occupation, mobile number, and contact email, also run [`profile-table-migration.sql`](profile-table-migration.sql). It backfills existing Auth users and creates a profile row automatically for new signups. Profiles are private: each signed-in user can only read and update their own row. Login accounts remain visible separately in **Authentication → Users**.
+   To enable personal daily, weekly, monthly, yearly, and one-time goals with progress history, also run [`goal-tracker-migration.sql`](goal-tracker-migration.sql). Re-run this migration if you already installed its earlier version so the database accepts the new Daily and Only once choices. The tables are private; each signed-in user can access only their own goals.
    If the `transactions` table already exists from an earlier setup, run [`borrowed-migration.sql`](borrowed-migration.sql) to allow the additional `borrowed` entry type.
    To enable permanent and date-only workout/diet edits on an existing database, also run [`plan-editor-migration.sql`](plan-editor-migration.sql).
    To enable the returned/repaid checkbox for lent and borrowed entries on an existing database, run [`loan-settlement-migration.sql`](loan-settlement-migration.sql).
@@ -35,3 +37,5 @@ Then open `http://localhost:8000`.
 - Weekly weight tracking with week-over-week change, history, and trend chart
 - Monthly finance, workout, meal, and weight progress report with print-to-PDF export
 - Account-scoped cloud storage through Supabase
+- Editable user profiles stored in a private `public.profiles` table (after running `profile-table-migration.sql`)
+- Daily, weekly, monthly, yearly, and one-time goals with progress and success/failure history (after running `goal-tracker-migration.sql`)

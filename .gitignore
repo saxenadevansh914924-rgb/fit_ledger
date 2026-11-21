@@ -6,6 +6,8 @@
 # Supabase setup and migration scripts
 *.sql
 !transaction-whatsapp-phone-migration.sql
+!profile-table-migration.sql
+!goal-tracker-migration.sql
 
 # Dependencies and build output (if tooling is added later)
 node_modules/
